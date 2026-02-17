@@ -20,6 +20,8 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
+import logo from "@/assets/logo/logo-up.png";
 
 type Step = 1 | 2;
 
@@ -154,8 +156,12 @@ export function SignupForm() {
           initial={{ opacity: 0, y: 18, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
-          className="w-full max-w-2xl mx-auto bg-white/90 backdrop-blur rounded-xl shadow-lg p-8 border"
+          className="w-full max-w-2xl mx-auto bg-white/90 backdrop-blur rounded-xl shadow-lg border"
         >
+          <Link href={"/"} className="w-full">
+            <Image src={logo} alt="logo" className="w-auto h-20 mx-auto my-5" />
+          </Link>
+
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">
@@ -167,7 +173,7 @@ export function SignupForm() {
           </div>
 
           {/* Stepper */}
-          <div className="mb-8">
+          <div className="mb-8 px-8">
             <div className="flex items-center justify-between gap-3">
               <StepPill
                 active={step === 1}
@@ -187,7 +193,7 @@ export function SignupForm() {
             {/* progress bar */}
             <div className="mt-4 h-2 w-full rounded-full bg-muted overflow-hidden">
               <motion.div
-                className="h-full rounded-full bg-[hsl(var(--primary))]"
+                className="h-full rounded-full bg-[#65aa36]"
                 initial={false}
                 animate={{ width: step === 1 ? "50%" : "100%" }}
                 transition={{ type: "spring", stiffness: 220, damping: 26 }}
@@ -195,7 +201,7 @@ export function SignupForm() {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-8 px-8">
             <AnimatePresence mode="wait" custom={direction}>
               {step === 1 ? (
                 <motion.div
@@ -211,7 +217,7 @@ export function SignupForm() {
                   {/* Personal Information Section */}
                   <div>
                     <div className="flex items-center gap-2 mb-6">
-                      <User className="w-5 h-5 text-[hsl(var(--primary))]" />
+                      <User className="w-5 h-5 text-[#65aa36]" />
                       <h2 className="text-lg font-bold text-foreground">
                         Personal Information
                       </h2>
@@ -336,7 +342,7 @@ export function SignupForm() {
                         type="button"
                         onClick={goNext}
                         disabled={!personalInfoValid}
-                        className="h-11 bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/90 text-[hsl(var(--primary-foreground))]"
+                        className="h-11 bg-[#65aa36] hover:bg-[#65aa36]/90 text-[hsl(var(--primary-foreground))] cursor-pointer"
                       >
                         Next <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>
@@ -358,7 +364,7 @@ export function SignupForm() {
                   <div className="border-t pt-8">
                     <div className="flex items-center justify-between mb-6">
                       <div className="flex items-center gap-2">
-                        <FileText className="w-5 h-5 text-[hsl(var(--primary))]" />
+                        <FileText className="w-5 h-5 text-[#65aa36]" />
                         <h2 className="text-lg font-bold text-foreground">
                           Document Verification
                         </h2>
@@ -396,7 +402,7 @@ export function SignupForm() {
                                 idp: null,
                               }));
                             }}
-                            className="data-[state=checked]:bg-[hsl(var(--primary))]"
+                            className="data-[state=checked]:bg-[#65aa36]"
                           />
                         </motion.div>
 
@@ -497,28 +503,29 @@ export function SignupForm() {
                           agreeTerms: checked as boolean,
                         }))
                       }
-                      className="mt-1 data-[state=checked]:bg-[hsl(var(--primary))] data-[state=checked]:border-[hsl(var(--primary))]"
+                      className="mt-1 data-[state=checked]:bg-[#65aa36] data-[state=checked]:border-[#65aa36] cursor-pointer"
                     />
                     <Label
                       htmlFor="terms"
                       className="text-sm text-foreground cursor-pointer"
                     >
-                      I confirm that the information provided is accurate and I
-                      agree to the{" "}
-                      <a
-                        href="#"
-                        className="text-[hsl(var(--primary))] hover:underline font-medium"
-                      >
-                        Terms of Service
-                      </a>{" "}
-                      and{" "}
-                      <a
-                        href="#"
-                        className="text-[hsl(var(--primary))] hover:underline font-medium"
-                      >
-                        Privacy Policy
-                      </a>
-                      .
+                      <p>
+                        I confirm that the information provided is accurate and
+                        I agree to the{" "}
+                        <Link
+                          href={"#"}
+                          className="text-[#65aa36] hover:underline"
+                        >
+                          Terms of Service
+                        </Link>{" "}
+                        and{" "}
+                        <Link
+                          href="#"
+                          className="text-[#65aa36] hover:underline font-medium"
+                        >
+                          Privacy Policy
+                        </Link>
+                      </p>
                     </Label>
                   </motion.div>
 
@@ -529,7 +536,7 @@ export function SignupForm() {
                         type="button"
                         variant="outline"
                         onClick={goBack}
-                        className="h-11"
+                        className="h-11 cursor-pointer"
                       >
                         <ArrowLeft className="w-4 h-4 mr-2" />
                         Back
@@ -540,7 +547,7 @@ export function SignupForm() {
                       <Button
                         type="submit"
                         disabled={!documentsValid || !formData.agreeTerms}
-                        className="h-11 bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/90 text-[hsl(var(--primary-foreground))] font-semibold"
+                        className="h-11 bg-[#65aa36] hover:bg-[#65aa36]/90 text-[hsl(var(--primary-foreground))] font-semibold cursor-pointer"
                       >
                         Create Account
                       </Button>
@@ -551,11 +558,11 @@ export function SignupForm() {
             </AnimatePresence>
             {/* Helper */}
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground pb-4">
                 Already have an account?{" "}
                 <Link
                   href="/auth/signin"
-                  className="text-[hsl(var(--primary))] hover:underline font-medium"
+                  className="text-[#65aa36] hover:underline font-medium"
                 >
                   Sign in
                 </Link>
@@ -619,17 +626,13 @@ function StepPill({
       className={[
         "flex items-center gap-2 px-3 py-2 rounded-full border text-sm font-medium transition-colors",
         active
-          ? "border-[hsl(var(--primary))] text-[hsl(var(--primary))] bg-[hsl(var(--primary))]/10"
+          ? "border-[#65aa36] text-[#65aa36] bg-[#65aa36]/10"
           : "border-border text-muted-foreground bg-white",
       ].join(" ")}
       animate={{ scale: active ? 1.02 : 1 }}
       transition={{ type: "spring", stiffness: 260, damping: 22 }}
     >
-      {done ? (
-        <CheckCircle2 className="w-4 h-4 text-[hsl(var(--primary))]" />
-      ) : (
-        icon
-      )}
+      {done ? <CheckCircle2 className="w-4 h-4 text-[#65aa36]" /> : icon}
       <span className={active ? "text-foreground" : ""}>{title}</span>
     </motion.div>
   );
@@ -672,8 +675,8 @@ function DocumentUploadBox({
 
         {!uploaded ? (
           <div className="py-8">
-            <FileUp className="w-12 h-12 text-muted-foreground mx-auto mb-3 group-hover:text-[hsl(var(--primary))] transition-colors" />
-            <p className="text-sm font-medium text-foreground group-hover:text-[hsl(var(--primary))] transition-colors">
+            <FileUp className="w-12 h-12 text-muted-foreground mx-auto mb-3 group-hover:text-[#65aa36] transition-colors" />
+            <p className="text-sm font-medium text-foreground group-hover:text-[#65aa36] transition-colors">
               Click to upload
             </p>
             <p className="text-xs text-muted-foreground mt-1">
