@@ -1,17 +1,17 @@
 "use client";
 import React from "react";
+import { Hero } from "./hero";
+import { DriveTypeSection } from "./DriveTypeSection";
+import { NearbyCars } from "./NearbyCars";
+import { HowItWorks } from "./HowItWorks";
 
 function Home() {
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 py-16 h-[80vh]">
-      <div className="text-center">
-        <h1 className="text-4xl font-medium tracking-tight sm:text-6xl font-rowdies">
-          Welcome to Your App
-        </h1>
-        <p className="mt-6 text-lg text-muted-foreground font-mono">
-          Start building something amazing with Next.js and TypeScript
-        </p>
-      </div>
+    <div className="">
+      <Hero />
+      <DriveTypeSection />
+      <NearbyCars />
+      <HowItWorks />
     </div>
   );
 }

@@ -74,13 +74,13 @@ export default function LoginPage() {
     <div className="min-h-screen w-full flex items-center justify-center p-4 overflow-hidden relative">
       {/* Animated gradient backgrounds */}
       <motion.div
-        className="absolute inset-0 bg-gradient-to-br from-gray-100 via-white to-green-50"
+        className="absolute inset-0 bg-linear-to-br from-gray-100 via-white to-green-50"
         variants={backgroundVariants}
         initial="animate"
         animate="animate"
       />
       <motion.div
-        className="absolute inset-0 bg-gradient-to-tr from-green-50 via-white to-gray-100"
+        className="absolute inset-0 bg-linear-to-tr from-green-50 via-white to-gray-100"
         variants={backgroundVariants}
         initial="animate"
         animate="animate"

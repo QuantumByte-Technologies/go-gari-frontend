@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -35,20 +34,21 @@ type NavbarPage =
 interface NavbarProps {
   isLoggedIn?: boolean;
 
-  // Optional: if you want to keep your old callback pattern
   onLogout?: () => void;
   onNavigateToDashboardTab?: (tab: string) => void;
 
-  // Optional: for showing actual user info/avatar letter
   user?: {
     name?: string;
     phone?: string;
     avatarLetter?: string; // e.g. "R"
   };
 
-  // Optional: allow overriding current page explicitly if you want
   currentPage?: NavbarPage;
 }
+
+const BRAND = "#65AA36";
+const BRAND_DARK = "#4f8e28"; // darker companion for gradients
+const BRAND_HOVER = "#5a982f"; // hover for solid buttons
 
 export function Navbar({
   isLoggedIn = false,
@@ -100,14 +100,12 @@ export function Navbar({
 
   // If we land on "/#section", scroll to it
   useEffect(() => {
-    // App router doesn't expose hash in pathname, so read it from location
     const hash = typeof window !== "undefined" ? window.location.hash : "";
     if (!hash) return;
 
     const id = hash.replace("#", "");
     const el = document.getElementById(id);
 
-    // small delay helps if sections render after layout
     if (el) {
       setTimeout(() => {
         el.scrollIntoView({ behavior: "smooth" });
@@ -120,7 +118,6 @@ export function Navbar({
   const scrollToSection = (id: string) => {
     setMobileMenuOpen(false);
 
-    // If not on home, navigate to home with hash so the home page scrolls on mount
     if (computedPage !== "home") {
       router.push(`/#${id}`);
       return;
@@ -186,7 +183,6 @@ export function Navbar({
       return;
     }
 
-    // Next.js default navigation fallback
     router.push(`/dashboard?tab=${encodeURIComponent(tab)}`);
   };
 
@@ -245,14 +241,12 @@ export function Navbar({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            {/* Use next/image for perf; if this external domain isn't in next.config, switch to <img> */}
             <Image
               src={logo}
               alt="GO GAARI"
-              width={100}
-              height={40}
-              className="h-12 md:h-14 w-auto transition-all duration-300"
+              className="w-60 object-contain"
               priority
+              sizes="1000px"
             />
           </motion.div>
 
@@ -266,8 +260,8 @@ export function Navbar({
                 onMouseLeave={() => setActiveHover(null)}
                 className={`relative px-4 py-2 text-sm font-semibold cursor-pointer transition-colors rounded-full ${
                   link.isActive
-                    ? "text-[#5E9D34]"
-                    : "text-gray-700 hover:text-[#5E9D34]"
+                    ? `text-[${BRAND}]`
+                    : `text-gray-700 hover:text-[${BRAND}]`
                 }`}
               >
                 {link.label}
@@ -281,7 +275,7 @@ export function Navbar({
                       exit={{ opacity: 0, scale: 0.92 }}
                       transition={{ duration: 0.18 }}
                       className={`absolute inset-0 rounded-full -z-10 ${
-                        link.isActive ? "bg-[#5E9D34]/10" : "bg-gray-100"
+                        link.isActive ? `bg-[${BRAND}]/10` : "bg-gray-100"
                       }`}
                     />
                   )}
@@ -292,7 +286,7 @@ export function Navbar({
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 450, damping: 28 }}
-                    className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#5E9D34] rounded-full"
+                    className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[${BRAND}] rounded-full`}
                   />
                 )}
               </motion.button>
@@ -306,9 +300,17 @@ export function Navbar({
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setProfileDropdownOpen((s) => !s)}
-                  className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-full border border-gray-200 hover:border-[#5E9D34] hover:shadow-md transition-all cursor-pointer"
+                  className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-full border border-gray-200 hover:shadow-md transition-all cursor-pointer"
+                  style={{
+                    borderColor: profileDropdownOpen ? BRAND : undefined,
+                  }}
                 >
-                  <div className="w-8 h-8 bg-linear-to-br from-[#5E9D34] to-[#4a7d29] rounded-full flex items-center justify-center text-white text-sm font-bold">
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                    style={{
+                      background: `linear-gradient(135deg, ${BRAND}, ${BRAND_DARK})`,
+                    }}
+                  >
                     {avatarLetter}
                   </div>
                   <motion.span
@@ -330,7 +332,12 @@ export function Navbar({
                     >
                       <div className="p-3 border-b border-gray-100">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-linear-to-br from-[#5E9D34] to-[#4a7d29] rounded-full flex items-center justify-center text-white font-bold">
+                          <div
+                            className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
+                            style={{
+                              background: `linear-gradient(135deg, ${BRAND}, ${BRAND_DARK})`,
+                            }}
+                          >
                             {avatarLetter}
                           </div>
                           <div>
@@ -349,7 +356,15 @@ export function Navbar({
                           <button
                             key={item.tab}
                             onClick={() => handleProfileMenuClick(item.tab)}
-                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-[#5E9D34]/10 hover:text-[#5E9D34] transition-colors cursor-pointer"
+                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 transition-colors cursor-pointer"
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = `${BRAND}1A`;
+                              e.currentTarget.style.color = BRAND;
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = "";
+                              e.currentTarget.style.color = "";
+                            }}
                           >
                             <item.icon size={18} weight="duotone" />
                             {item.label}
@@ -375,16 +390,38 @@ export function Navbar({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-gray-300 text-gray-700 hover:border-[#5E9D34] hover:text-[#5E9D34] hover:bg-transparent transition-all duration-300 cursor-pointer"
+                  className="border-gray-300 text-gray-700 hover:bg-transparent transition-all duration-300 cursor-pointer"
+                  style={{ borderColor: undefined }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = BRAND;
+                    e.currentTarget.style.color = BRAND;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "";
+                    e.currentTarget.style.color = "";
+                  }}
                   onClick={() => router.push("/auth/signin")}
                 >
                   Sign in
                 </Button>
+
                 <Button
                   variant="default"
                   size="sm"
                   onClick={() => router.push("/auth/signup")}
-                  className="shadow-md shadow-[#5E9D34]/20 hover:shadow-lg hover:shadow-[#5E9D34]/30 transition-all duration-300 cursor-pointer"
+                  className="transition-all duration-300 cursor-pointer"
+                  style={{
+                    backgroundColor: BRAND,
+                    boxShadow: `0 8px 18px ${BRAND}33`,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = BRAND_HOVER;
+                    e.currentTarget.style.boxShadow = `0 10px 22px ${BRAND}40`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = BRAND;
+                    e.currentTarget.style.boxShadow = `0 8px 18px ${BRAND}33`;
+                  }}
                 >
                   Sign up
                 </Button>
@@ -394,9 +431,15 @@ export function Navbar({
             {/* Mobile Menu Button */}
             <motion.button
               whileTap={{ scale: 0.9 }}
-              className="lg:hidden p-2 text-gray-600 hover:text-[#5E9D34] hover:bg-gray-100 rounded-lg transition-colors"
+              className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               onClick={() => setMobileMenuOpen((s) => !s)}
               aria-label="Toggle menu"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = BRAND;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = "";
+              }}
             >
               {mobileMenuOpen ? (
                 <X size={24} weight="bold" />
@@ -424,10 +467,19 @@ export function Navbar({
                   transition={{ delay: index * 0.05 }}
                   onClick={link.action}
                   className={`text-left font-medium transition-all py-3 px-4 rounded-xl ${
-                    link.isActive
-                      ? "text-[#5E9D34] bg-[#5E9D34]/10"
-                      : "text-gray-700 hover:text-[#5E9D34] hover:bg-gray-50"
+                    link.isActive ? "" : "text-gray-700 hover:bg-gray-50"
                   }`}
+                  style={
+                    link.isActive
+                      ? { color: BRAND, backgroundColor: `${BRAND}1A` }
+                      : undefined
+                  }
+                  onMouseEnter={(e) => {
+                    if (!link.isActive) e.currentTarget.style.color = BRAND;
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!link.isActive) e.currentTarget.style.color = "";
+                  }}
                 >
                   {link.label}
                 </motion.button>
@@ -442,7 +494,15 @@ export function Navbar({
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: (navLinks.length + index) * 0.05 }}
                       onClick={() => handleProfileMenuClick(item.tab)}
-                      className="w-full flex items-center gap-3 py-3 px-4 rounded-xl text-gray-700 hover:text-[#5E9D34] hover:bg-gray-50 font-medium"
+                      className="w-full flex items-center gap-3 py-3 px-4 rounded-xl text-gray-700 font-medium"
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = BRAND;
+                        e.currentTarget.style.backgroundColor = "#f9fafb";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = "";
+                        e.currentTarget.style.backgroundColor = "";
+                      }}
                     >
                       <item.icon size={20} weight="duotone" />
                       {item.label}
@@ -461,7 +521,15 @@ export function Navbar({
                 <div className="pt-4 mt-2 border-t border-gray-100 space-y-3">
                   <Button
                     variant="outline"
-                    className="w-full border-gray-300 text-gray-700 hover:border-[#5E9D34] hover:text-[#5E9D34]"
+                    className="w-full border-gray-300 text-gray-700"
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = BRAND;
+                      e.currentTarget.style.color = BRAND;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = "";
+                      e.currentTarget.style.color = "";
+                    }}
                     onClick={() => {
                       router.push("/signin");
                       setMobileMenuOpen(false);
@@ -469,9 +537,22 @@ export function Navbar({
                   >
                     Sign in
                   </Button>
+
                   <Button
                     variant="default"
-                    className="w-full shadow-md shadow-[#5E9D34]/20"
+                    className="w-full"
+                    style={{
+                      backgroundColor: BRAND,
+                      boxShadow: `0 8px 18px ${BRAND}33`,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = BRAND_HOVER;
+                      e.currentTarget.style.boxShadow = `0 10px 22px ${BRAND}40`;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = BRAND;
+                      e.currentTarget.style.boxShadow = `0 8px 18px ${BRAND}33`;
+                    }}
                     onClick={() => {
                       router.push("/signup");
                       setMobileMenuOpen(false);
