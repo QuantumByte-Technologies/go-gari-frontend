@@ -1,9 +1,14 @@
 "use client";
-import React from "react";
-import { Hero } from "./hero";
+import CitySection from "./CitySection";
 import { DriveTypeSection } from "./DriveTypeSection";
-import { NearbyCars } from "./NearbyCars";
+import FinalCTA from "./FinalCTA";
+import { Hero } from "./hero";
 import { HowItWorks } from "./HowItWorks";
+import { NearbyCars } from "./NearbyCars";
+import PlatformClarity from "./PlatformClarity";
+import RideCategories from "./RideCategories";
+import SafetySection from "./SafetySection";
+import TestimonialsSection from "./Testimonial";
 
 function Home() {
   return (
@@ -12,6 +17,12 @@ function Home() {
       <DriveTypeSection />
       <NearbyCars />
       <HowItWorks />
+      <CitySection />
+      <RideCategories />
+      <SafetySection />
+      <TestimonialsSection />
+      <PlatformClarity />
+      <FinalCTA />
     </div>
   );
 }
