@@ -94,7 +94,7 @@ export default function SafetySection() {
         >
           {/* Decorative accent */}
           <motion.div
-            className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#5E9D34] via-orange-400 to-[#5E9D34]"
+            className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-[#5E9D34] via-orange-400 to-[#5E9D34]"
             initial={{ scaleX: 0, transformOrigin: "left" }}
             whileInView={{ scaleX: 1 }}
             viewport={{ once: true }}
@@ -155,7 +155,7 @@ export default function SafetySection() {
                       className="group flex items-start gap-4"
                     >
                       <motion.div
-                        className={`relative flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br ${bgClass} flex items-center justify-center mt-0.5 shadow-sm`}
+                        className={`relative shrink-0 w-10 h-10 rounded-full bg-linear-to-br ${bgClass} flex items-center justify-center mt-0.5 shadow-sm`}
                         whileHover={
                           reduce
                             ? undefined
@@ -198,7 +198,7 @@ export default function SafetySection() {
             {/* Right: Image card */}
             <motion.div
               variants={imageCard}
-              className="relative h-full min-h-[320px] rounded-2xl overflow-hidden bg-gray-100 shadow-lg"
+              className="relative h-full min-h-80 rounded-2xl overflow-hidden bg-gray-100 shadow-lg"
               whileHover={reduce ? undefined : { y: -6 }}
               transition={{ type: "spring", stiffness: 220, damping: 20 }}
             >
@@ -212,7 +212,7 @@ export default function SafetySection() {
               />
 
               <motion.div
-                className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"
+                className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent"
                 initial={{ opacity: 0.85 }}
                 whileHover={reduce ? undefined : { opacity: 1 }}
                 transition={{ duration: 0.3 }}
@@ -233,7 +233,7 @@ export default function SafetySection() {
 
               {!reduce && (
                 <motion.div
-                  className="pointer-events-none absolute -left-1/2 top-0 h-full w-1/2 rotate-12 bg-gradient-to-r from-transparent via-white/15 to-transparent"
+                  className="pointer-events-none absolute -left-1/2 top-0 h-full w-1/2 rotate-12 bg-linear-to-r from-transparent via-white/15 to-transparent"
                   initial={{ x: "-80%", opacity: 0 }}
                   whileHover={{ x: "260%", opacity: 1 }}
                   transition={{ duration: 0.9, ease: EASE_OUT }}
