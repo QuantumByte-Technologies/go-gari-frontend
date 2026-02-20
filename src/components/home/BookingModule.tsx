@@ -62,7 +62,7 @@ export function BookingModule() {
   const selectedCar = carTypes.find((c) => c.id === selectedCarType);
 
   const handleNavigateToSearch = () => {
-    router.push("/search"); // change to your actual search page route
+    router.push("/search-cars"); // change to your actual search page route
   };
 
   return (

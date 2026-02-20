@@ -135,12 +135,7 @@ export function Navbar({
     e.preventDefault();
     setMobileMenuOpen(false);
     setProfileDropdownOpen(false);
-
-    if (computedPage !== "home") {
-      router.push("/");
-      return;
-    }
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    router.push("/");
   };
 
   const navLinks = [
@@ -148,8 +143,8 @@ export function Navbar({
       label: "Home",
       action: () => {
         setMobileMenuOpen(false);
-        if (computedPage !== "home") router.push("/");
-        else window.scrollTo({ top: 0, behavior: "smooth" });
+        router.push("/");
+        window.scrollTo({ top: 0, behavior: "smooth" });
       },
       isActive: computedPage === "home",
     },
