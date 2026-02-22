@@ -15,6 +15,8 @@ import {
 import { Car } from "@/types/car";
 import { Button } from "@/components/ui/button";
 import { cardIn, EASE_OUT } from "@/lib/motion";
+import { useRouter } from "next/navigation";
+
 // import { cardIn, EASE_OUT } from "@/lib/motion";
 
 // // ✅ change this to your actual Button path
@@ -30,6 +32,8 @@ type Props = {
 export default function CarCard({ car, isFavorite, onToggleFavorite }: Props) {
   const reduce = useReducedMotion();
   const [currentImg, setCurrentImg] = useState(0);
+
+  const router = useRouter();
 
   const images = useMemo(
     () => (car.images?.length ? car.images : [car.image]),
@@ -173,7 +177,12 @@ export default function CarCard({ car, isFavorite, onToggleFavorite }: Props) {
             </p>
           </div>
 
-          <Button>Book Now</Button>
+          <Button
+            onClick={() => router.push(`/search-cars/${car.id}`)}
+            className="bg-[#68ab37] hover:bg-[#68ab37]/80 cursor-pointer"
+          >
+            Book Now
+          </Button>
         </div>
       </div>
     </motion.article>
