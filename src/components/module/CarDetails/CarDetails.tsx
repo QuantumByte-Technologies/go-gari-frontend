@@ -1188,7 +1188,7 @@ export function CarDetailsPage() {
   const router = useRouter();
 
   const params = useParams();
-  const carId = params.id as string;
+  const carId = params.id as number;
 
   const car = useMemo(() => {
     return CAR_DATA.find((c) => c.id === carId) ?? CAR_DATA[0];
