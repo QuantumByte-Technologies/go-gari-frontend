@@ -1,22 +1,22 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Car,
+  CaretDown,
+  ChatCircleDots,
+  Headset,
+  Heart,
+  List,
+  MagnifyingGlass,
+  SignOut,
+  UserCircle,
+  X,
+} from "@phosphor-icons/react";
+import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  List,
-  X,
-  Car,
-  UserCircle,
-  MagnifyingGlass,
-  Headset,
-  ChatCircleDots,
-  SignOut,
-  CaretDown,
-  Heart,
-} from "@phosphor-icons/react";
-import { Button } from "@/components/ui/button";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import logo from "@/assets/logo/logo-up.png";
 
@@ -239,9 +239,9 @@ export function Navbar({
             <Image
               src={logo}
               alt="GO GAARI"
-              className="w-60 object-contain"
               priority
-              sizes="1000px"
+              className="h-8 sm:h-9 md:h-10 lg:h-11 w-auto object-contain"
+              sizes="(max-width: 768px) 120px, 180px"
             />
           </motion.div>
 

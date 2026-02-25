@@ -1,27 +1,30 @@
+// components/home/Hero.tsx
 "use client";
 
-import React from "react";
+import React, { useCallback } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowRight, Car, MapPin, TrendUp } from "@phosphor-icons/react";
+
+// import { BookingModule } from "@/components/home/booking/BookingModule";
+import { Button } from "@/components/ui/button";
 import { BookingModule } from "./BookingModule";
-import { Button } from "../ui/button";
 
 export function Hero() {
   const router = useRouter();
 
-  const handleNavigateToSearch = () => {
-    router.push("/search"); // your search route
-  };
+  const handleNavigateToSearch = useCallback(() => {
+    router.push("/search");
+  }, [router]);
 
-  const handleHowItWorks = () => {
-    router.push("/how-it-works"); // your how it works route
-  };
+  const handleHowItWorks = useCallback(() => {
+    router.push("/#how-it-works");
+  }, [router]);
 
   return (
     <section className="relative w-full min-h-screen pb-20 overflow-hidden">
-      {/* Background Image */}
+      {/* Background */}
       <div className="absolute inset-0 z-0">
         <Image
           src="https://cdn.magicpatterns.com/uploads/aiGg1Et6ZNeYPSgqBa3EKn/Backgroudn_image.png"
@@ -35,15 +38,15 @@ export function Hero() {
         <div className="absolute inset-0 bg-linear-to-r from-black/70 via-black/40 to-transparent" />
       </div>
 
-      {/* Angled Bottom Edge */}
+      {/* Angled bottom edge */}
       <div
         className="absolute bottom-0 left-0 right-0 h-24 bg-white z-10"
         style={{ clipPath: "polygon(0 100%, 100% 100%, 100% 0)" }}
       />
 
       {/* Content */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-10 md:pt-48 md:pb-20">
-        <div className="max-w-2xl text-center md:text-left mx-auto md:mx-0 mb-12">
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-32 md:pt-48 pb-10 md:pb-20">
+        <div className="max-w-2xl text-center md:text-left mx-auto md:mx-0 mb-10 md:mb-12">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -63,7 +66,7 @@ export function Hero() {
             priced, carefully verified.
           </motion.p>
 
-          {/* Stats Pills */}
+          {/* Stats */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -84,28 +87,33 @@ export function Hero() {
             </div>
           </motion.div>
 
+          {/* CTAs */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="flex flex-col sm:flex-row items-center gap-4 justify-center md:justify-start"
+            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 justify-center md:justify-start"
           >
             <Button
               size="lg"
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto bg-[#66aa3e] hover:bg-green-700 cursor-pointer"
               onClick={handleNavigateToSearch}
             >
               Find cars near you
             </Button>
 
-            {/* FIXED: Using native button instead of Button component for the one with icon */}
-            <button
-              onClick={handleHowItWorks}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-900 rounded-lg font-medium hover:bg-gray-100 transition-colors text-base"
+            {/* shadcn Button + icon via asChild (keeps design consistent & accessible) */}
+            <Button
+              variant="secondary"
+              size="lg"
+              asChild
+              className="w-full sm:w-auto bg-white text-gray-900 hover:bg-gray-100"
             >
-              How it works
-              <ArrowRight size={16} weight="bold" />
-            </button>
+              <button onClick={handleHowItWorks} type="button">
+                How it works
+                <ArrowRight size={16} weight="bold" className="ml-2" />
+              </button>
+            </Button>
           </motion.div>
 
           <motion.div
@@ -121,7 +129,6 @@ export function Hero() {
           </motion.div>
         </div>
 
-        {/* ✅ BookingModule now has its own router */}
         <BookingModule />
       </div>
     </section>
