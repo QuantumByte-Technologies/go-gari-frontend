@@ -1,10 +1,18 @@
 // components/checkout/CustomerInfo.tsx
 "use client";
 
-import { Input } from "@/components/ui/Input";
+// import { Input } from "@/components/ui/Input";
 import type { FormData } from "@/types/checkout";
 import { DEMO_USER } from "@/types/checkout";
-import { Calendar, CheckCircle2, FileText, Mail, Phone, User } from "lucide-react";
+import {
+  Calendar,
+  CheckCircle2,
+  FileText,
+  Mail,
+  Phone,
+  User,
+} from "lucide-react";
+import { Input } from "./Input";
 
 interface CustomerInfoProps {
   formData: FormData;

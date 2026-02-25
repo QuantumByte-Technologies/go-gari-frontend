@@ -1,3 +1,5 @@
+import { RentalMode } from "@/types/checkout";
+
 // utils/checkout.ts
 export const calculateTotalDays = (
   rentalMode: RentalMode,

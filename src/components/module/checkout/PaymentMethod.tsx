@@ -5,12 +5,13 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { CreditCard, Smartphone, Lock } from "lucide-react";
-import { Input } from "@/components/ui/Input";
+// import { Input } from "@/components/ui/Input";
 import type {
   PaymentMethod as PaymentMethodType,
   WalletProvider,
   FormData,
 } from "@/types/checkout";
+import { Input } from "./Input";
 
 interface PaymentMethodProps {
   paymentMethod: PaymentMethodType;

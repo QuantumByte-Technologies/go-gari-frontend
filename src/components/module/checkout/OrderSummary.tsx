@@ -3,7 +3,8 @@
 "use client";
 
 import { Shield, CheckCircle2 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { Button } from "./Button";
+// import { Button } from "@/components/ui/Button";
 
 interface OrderSummaryProps {
   subtotal: number;

@@ -1,28 +1,51 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-img-element */
 // app/checkout/[carId]/page.tsx
 "use client";
 
 import { useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Breadcrumb } from "@/components/ui/Breadcrumb";
-import { VehicleCard } from "@/components/checkout/VehicleCard";
-import { CustomerInfo } from "@/components/checkout/CustomerInfo";
-import { PaymentMethod } from "@/components/checkout/PaymentMethod";
-import { RentalPeriod } from "@/components/checkout/RentalPeriod";
-import { InsuranceSelector } from "@/components/checkout/InsuranceSelector";
-import { OrderSummary } from "@/components/checkout/OrderSummary";
-import { CAR_DATA, DEMO_USER } from "@/types/checkout";
+import { VehicleCard } from "./VehicleCard";
+import { CustomerInfo } from "./CustomerInfo";
+import { PaymentMethod } from "./PaymentMethod";
+import {
+  CAR_DATA,
+  DEMO_USER,
+  FormData,
+  InsurancePlan,
+  PaymentMethod as PaymentMethodType,
+  RentalMode,
+  WalletProvider,
+} from "@/types/checkout";
+import { RentalPeriod } from "./RentalPeriod";
+import { InsuranceSelector } from "./InsuranceSelector";
+import { CheckCircle2, Shield } from "lucide-react";
 import {
   calculateTotalDays,
   getRentalLabel,
   validateEmail,
 } from "@/utils/checkout";
-import type {
-  RentalMode,
-  PaymentMethod as PaymentMethodType,
-  WalletProvider,
-  InsurancePlan,
-  FormData,
-} from "@/types/checkout";
+import { Breadcrumb } from "./Breadcrumb";
+// import { Breadcrumb } from "@/components/ui/Breadcrumb";
+// import { VehicleCard } from "@/components/checkout/VehicleCard";
+// import { CustomerInfo } from "@/components/checkout/CustomerInfo";
+// import { PaymentMethod } from "@/components/checkout/PaymentMethod";
+// import { RentalPeriod } from "@/components/checkout/RentalPeriod";
+// import { InsuranceSelector } from "@/components/checkout/InsuranceSelector";
+// import { OrderSummary } from "@/components/checkout/OrderSummary";
+// import { CAR_DATA, DEMO_USER } from "@/types/checkout";
+// import {
+//   calculateTotalDays,
+//   getRentalLabel,
+//   validateEmail,
+// } from "@/utils/checkout";
+// import type {
+//   RentalMode,
+//   PaymentMethod as PaymentMethodType,
+//   WalletProvider,
+//   InsurancePlan,
+//   FormData,
+// } from "@/types/checkout";
 
 export default function CheckoutPage() {
   const router = useRouter();
