@@ -8,7 +8,7 @@ const documentsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     /** List the current user's uploaded documents */
     getDocuments: builder.query<PaginatedResponse<UserDocument>, void>({
-      query: () => "/documents/",
+      query: () => "/accounts/documents/",
       providesTags: (result) =>
         result
           ? [
@@ -24,7 +24,7 @@ const documentsApi = baseApi.injectEndpoints({
     /** Upload a new document (multipart/form-data) */
     uploadDocument: builder.mutation<UserDocument, FormData>({
       query: (formData) => ({
-        url: "/documents/",
+        url: "/accounts/documents/",
         method: "POST",
         body: formData,
         // Don't set Content-Type — browser will set it with boundary for FormData
@@ -35,7 +35,7 @@ const documentsApi = baseApi.injectEndpoints({
     /** Delete a document (only rejected or pending can be deleted) */
     deleteDocument: builder.mutation<void, number>({
       query: (id) => ({
-        url: `/documents/${id}/`,
+        url: `/accounts/documents/${id}/`,
         method: "DELETE",
       }),
       invalidatesTags: (_result, _error, id) => [

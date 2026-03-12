@@ -866,7 +866,7 @@ const tripsHandlers = [
 // ─── Documents Handlers ─────────────────────────────────────────
 const documentsHandlers = [
   // List documents
-  http.get(`${API_BASE}/documents/`, ({ request }) => {
+  http.get(`${API_BASE}/accounts/documents/`, ({ request }) => {
     const auth = request.headers.get("Authorization");
     if (!auth?.startsWith("Bearer ")) {
       return HttpResponse.json(
@@ -883,7 +883,7 @@ const documentsHandlers = [
   }),
 
   // Upload document
-  http.post(`${API_BASE}/documents/`, ({ request }) => {
+  http.post(`${API_BASE}/accounts/documents/`, ({ request }) => {
     const auth = request.headers.get("Authorization");
     if (!auth?.startsWith("Bearer ")) {
       return HttpResponse.json(
@@ -907,7 +907,7 @@ const documentsHandlers = [
   }),
 
   // Delete document
-  http.delete(`${API_BASE}/documents/:id/`, ({ params, request }) => {
+  http.delete(`${API_BASE}/accounts/documents/:id/`, ({ params, request }) => {
     const auth = request.headers.get("Authorization");
     if (!auth?.startsWith("Bearer ")) {
       return HttpResponse.json(
