@@ -24,8 +24,8 @@ export default function ChauffeurCard({ chauffeur, index = 0 }: Props) {
   return (
     <motion.div
       variants={cardIn}
-      initial={prefersReduced ? "visible" : "hidden"}
-      whileInView="visible"
+      initial={prefersReduced ? "show" : "hidden"}
+      whileInView="show"
       viewport={{ once: true, amount: 0.2 }}
       transition={{ delay: index * 0.05, ease: EASE_OUT }}
       className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"

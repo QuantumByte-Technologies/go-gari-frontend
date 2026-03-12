@@ -23,6 +23,13 @@ import { FieldSelect } from "../module/Hero/FieldSelect";
 import { FieldInput } from "../module/Hero/FieldInput";
 import { SelectedCarBanner } from "../module/Hero/SelectedCarBanner";
 
+/** Get tomorrow's date as YYYY-MM-DD */
+function getTomorrow(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().split("T")[0];
+}
+
 export function BookingModule() {
   const router = useRouter();
 
@@ -30,6 +37,9 @@ export function BookingModule() {
   const [selectedCarType, setSelectedCarType] = useState<string | null>(
     DEFAULTS.carTypeId,
   );
+  const [pickupDate, setPickupDate] = useState<string>("");
+  const [returnDate, setReturnDate] = useState<string>("");
+  const [pickupTime, setPickupTime] = useState<string>("10:00");
 
   const selectedCar = useMemo(
     () => CAR_TYPES.find((c) => c.id === selectedCarType),
@@ -37,7 +47,7 @@ export function BookingModule() {
   );
 
   const handleNavigateToSearch = useCallback(() => {
-    router.push("/search-cars"); // change to your real route
+    router.push("/search-cars");
   }, [router]);
 
   return (
@@ -126,6 +136,14 @@ export function BookingModule() {
                     </label>
                   }
                   type="date"
+                  value={pickupDate}
+                  onChange={(val) => {
+                    setPickupDate(val);
+                    // Clear return date if it's now before pickup
+                    if (val && returnDate && val >= returnDate) {
+                      setReturnDate("");
+                    }
+                  }}
                 />
 
                 <FieldInput
@@ -140,6 +158,9 @@ export function BookingModule() {
                     </label>
                   }
                   type="date"
+                  value={returnDate}
+                  onChange={(val) => setReturnDate(val)}
+                  minDate={pickupDate ? new Date(pickupDate + "T00:00:00") : new Date()}
                 />
 
                 <FieldInput
@@ -154,7 +175,8 @@ export function BookingModule() {
                     </label>
                   }
                   type="time"
-                  defaultValue="10:00"
+                  value={pickupTime}
+                  onChange={setPickupTime}
                 />
 
                 {/* Search */}

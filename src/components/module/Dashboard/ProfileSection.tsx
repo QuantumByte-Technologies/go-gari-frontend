@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/ui/date-picker";
+import { CountrySelector } from "@/components/ui/country-selector";
 import {
   Camera,
   CheckCircle,
@@ -268,14 +270,12 @@ export default function ProfileSection() {
             <Label className="block text-sm font-medium text-gray-700 mb-1">
               Date of Birth
             </Label>
-            <Input
-              type="date"
+            <DatePicker
               value={formData.dob}
+              onChange={(val) => setFormData((p) => ({ ...p, dob: val }))}
+              maxDate={new Date()}
               disabled={!isEditing}
-              onChange={(e) =>
-                setFormData((p) => ({ ...p, dob: e.target.value }))
-              }
-              className="h-12 rounded-xl border-gray-200 disabled:bg-gray-50 disabled:text-gray-500 focus-visible:ring-[#5E9D34]"
+              className="h-12 rounded-xl"
             />
           </div>
 
@@ -283,13 +283,10 @@ export default function ProfileSection() {
             <Label className="block text-sm font-medium text-gray-700 mb-1">
               Country
             </Label>
-            <Input
+            <CountrySelector
               value={formData.country}
+              onChange={(val) => setFormData((p) => ({ ...p, country: val }))}
               disabled={!isEditing}
-              onChange={(e) =>
-                setFormData((p) => ({ ...p, country: e.target.value }))
-              }
-              className="h-12 rounded-xl border-gray-200 disabled:bg-gray-50 disabled:text-gray-500 focus-visible:ring-[#5E9D34]"
             />
           </div>
         </div>

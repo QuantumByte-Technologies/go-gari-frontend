@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { formatBDT } from "@/utils/checkout";
 import { PrimaryButton, Toggle } from "./ui";
 import { TimeInput } from "./TimeInput";
+import { DateRangePicker } from "@/components/ui/date-picker";
 
 interface Props {
   car: CarDetail;
@@ -119,31 +120,14 @@ export function PricingCard({ car }: Props) {
       </div>
 
       {/* Date selection */}
-      <div className="mb-4 space-y-3">
-        <div>
-          <label className="mb-1.5 block text-xs font-medium text-gray-500">
-            Start Date
-          </label>
-          <input
-            type="date"
-            value={startDate}
-            min={getTomorrow()}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="h-12 w-full rounded-xl border border-gray-200 px-4 text-sm font-medium text-gray-900 outline-none focus:border-transparent focus:ring-2 focus:ring-[#5E9D34]"
-          />
-        </div>
-        <div>
-          <label className="mb-1.5 block text-xs font-medium text-gray-500">
-            End Date
-          </label>
-          <input
-            type="date"
-            value={endDate}
-            min={startDate || getTomorrow()}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="h-12 w-full rounded-xl border border-gray-200 px-4 text-sm font-medium text-gray-900 outline-none focus:border-transparent focus:ring-2 focus:ring-[#5E9D34]"
-          />
-        </div>
+      <div className="mb-4">
+        <DateRangePicker
+          startDate={startDate}
+          endDate={endDate}
+          onStartChange={setStartDate}
+          onEndChange={setEndDate}
+          minDate={new Date(getTomorrow())}
+        />
       </div>
 
       {/* Time inputs */}
