@@ -2,17 +2,23 @@
 
 import React, { useState } from "react";
 import { motion, type Variants } from "framer-motion";
-import { Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, ArrowRight, Eye, EyeOff, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import logo from "@/assets/logo/logo-up.png";
 import Image from "next/image";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema, type LoginFormData } from "@/schemas/auth";
+import { useLoginMutation } from "@/redux/api/authApi";
+import type { ApiError } from "@/types/api/common";
+import { toast } from "sonner";
 
-// ✅ Cubic-bezier tuples (TypeScript-safe for strict Framer Motion typings)
+// Cubic-bezier tuples (TypeScript-safe for strict Framer Motion typings)
 const EASE_IN_OUT: [number, number, number, number] = [0.42, 0, 0.58, 1];
 const EASE_OUT: [number, number, number, number] = [0, 0, 0.58, 1];
 const EASE_LINEAR: [number, number, number, number] = [0, 0, 1, 1];
 
-// ✅ Variants typed to keep TS happy
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
@@ -57,17 +63,47 @@ const floatingShapeVariants: Variants = {
 };
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const [login, { isLoading }] = useLoginMutation();
 
-    // Simulate API call
-    setTimeout(() => setIsLoading(false), 1500);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError,
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
+
+  const onSubmit = async (data: LoginFormData) => {
+    try {
+      await login(data).unwrap();
+      toast.success("Welcome back!");
+      router.push("/");
+    } catch (err) {
+      const error = err as { data?: ApiError; status?: number };
+
+      if (error.status === 401) {
+        setError("root", {
+          message: "Invalid email or password. Please try again.",
+        });
+      } else if (error.data?.detail) {
+        setError("root", { message: error.data.detail });
+      } else if (error.data?.email) {
+        setError("email", {
+          message: Array.isArray(error.data.email)
+            ? error.data.email[0]
+            : error.data.email,
+        });
+      } else {
+        setError("root", {
+          message: "Something went wrong. Please try again.",
+        });
+      }
+    }
   };
 
   return (
@@ -119,12 +155,6 @@ export default function LoginPage() {
           </Link>
           {/* Header */}
           <motion.div className="text-center mb-8" variants={itemVariants}>
-            {/* <motion.h1
-              className="text-4xl md:text-5xl font-bold text-gray-900 mb-2"
-              variants={itemVariants}
-            >
-              Login
-            </motion.h1> */}
             <motion.p
               className="text-gray-600 text-2xl font-bold"
               variants={itemVariants}
@@ -133,46 +163,79 @@ export default function LoginPage() {
             </motion.p>
           </motion.div>
 
+          {/* API / root error */}
+          {errors.root && (
+            <motion.div
+              className="mx-8 md:mx-10 mb-4 flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              role="alert"
+            >
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{errors.root.message}</span>
+            </motion.div>
+          )}
+
           {/* Form */}
           <motion.form
-            onSubmit={handleSubmit}
+            onSubmit={handleSubmit(onSubmit)}
             className="space-y-5 px-8 md:px-10"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
+            noValidate
           >
-            {/* Email/Phone Input */}
+            {/* Email Input */}
             <motion.div variants={itemVariants}>
-              <label className="block text-sm font-semibold text-gray-800 mb-3">
-                Email or Phone Number
+              <label
+                htmlFor="email"
+                className="block text-sm font-semibold text-gray-800 mb-3"
+              >
+                Email
               </label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#65aa36]" />
                 <input
-                  type="text"
-                  placeholder="Enter your email or phone"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-gray-50/80 border-2 border-gray-200 rounded-xl focus:border-[#65aa36] focus:outline-none transition-all duration-300 text-gray-900 placeholder-gray-500"
-                  required
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  {...register("email")}
+                  aria-invalid={!!errors.email}
+                  className={`w-full pl-12 pr-4 py-3 bg-gray-50/80 border-2 rounded-xl focus:outline-none transition-all duration-300 text-gray-900 placeholder-gray-500 ${
+                    errors.email
+                      ? "border-red-400 focus:border-red-500"
+                      : "border-gray-200 focus:border-[#65aa36]"
+                  }`}
                 />
               </div>
+              {errors.email && (
+                <p className="mt-1.5 text-sm text-red-600" role="alert">
+                  {errors.email.message}
+                </p>
+              )}
             </motion.div>
 
             {/* Password Input */}
             <motion.div variants={itemVariants}>
-              <label className="block text-sm font-semibold text-gray-800 mb-3">
+              <label
+                htmlFor="password"
+                className="block text-sm font-semibold text-gray-800 mb-3"
+              >
                 Password
               </label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#65aa36]" />
                 <input
+                  id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-12 pr-12 py-3 bg-gray-50/80 border-2 border-gray-200 rounded-xl focus:border-[#65aa36] focus:outline-none transition-all duration-300 text-gray-900 placeholder-gray-500"
-                  required
+                  {...register("password")}
+                  aria-invalid={!!errors.password}
+                  className={`w-full pl-12 pr-12 py-3 bg-gray-50/80 border-2 rounded-xl focus:outline-none transition-all duration-300 text-gray-900 placeholder-gray-500 ${
+                    errors.password
+                      ? "border-red-400 focus:border-red-500"
+                      : "border-gray-200 focus:border-[#65aa36]"
+                  }`}
                 />
                 <button
                   type="button"
@@ -187,6 +250,11 @@ export default function LoginPage() {
                   )}
                 </button>
               </div>
+              {errors.password && (
+                <p className="mt-1.5 text-sm text-red-600" role="alert">
+                  {errors.password.message}
+                </p>
+              )}
             </motion.div>
 
             {/* Submit Button */}
@@ -206,7 +274,7 @@ export default function LoginPage() {
                     transition={{
                       duration: 1,
                       repeat: Infinity,
-                      ease: EASE_LINEAR, // ✅ replaced "linear"
+                      ease: EASE_LINEAR,
                     }}
                   />
                   <span>Logging in...</span>
@@ -243,7 +311,7 @@ export default function LoginPage() {
             >
               Create Account
             </Link>
-            <span className="hidden sm:inline text-gray-300">•</span>
+            <span className="hidden sm:inline text-gray-300">&bull;</span>
             <Link
               href="/auth/forgot-password"
               className="text-[#65aa36]/70 hover:text-[#65aa36] font-semibold transition-colors"
@@ -270,7 +338,7 @@ function AnimatedBackground() {
         transition={{
           duration: 10,
           repeat: Infinity,
-          ease: EASE_IN_OUT, // ✅ replaced "easeInOut"
+          ease: EASE_IN_OUT,
         }}
       />
       <motion.div

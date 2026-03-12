@@ -5,145 +5,118 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  FileUp,
   User,
   Mail,
   Phone,
-  MapPin,
   Calendar,
-  FileText,
+  Lock,
   ArrowLeft,
   ArrowRight,
-  CheckCircle2,
+  Eye,
+  EyeOff,
+  AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import logo from "@/assets/logo/logo-up.png";
-
-type Step = 1 | 2;
-
-type UploadKey =
-  | "nidFront"
-  | "nidBack"
-  | "dlFront"
-  | "dlBack"
-  | "passportBio"
-  | "idp";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { registerSchema, type RegisterFormData } from "@/schemas/auth";
+import { useRegisterMutation } from "@/redux/api/authApi";
+import type { ApiError } from "@/types/api/common";
+import { toast } from "sonner";
 
 export function SignupForm() {
-  const [step, setStep] = useState<Step>(1);
-  const [isInternational, setIsInternational] = useState(false);
+  const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(false);
 
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    phone: "",
-    dob: "",
-    address: "",
-    agreeTerms: false,
+  const [registerUser, { isLoading }] = useRegisterMutation();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid },
+    setError,
+    watch,
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      email: "",
+      phone: "",
+      first_name: "",
+      last_name: "",
+      password: "",
+      password_confirm: "",
+      dob: undefined,
+      country: "Bangladesh",
+    },
+    mode: "onTouched",
   });
 
-  const [uploadedFiles, setUploadedFiles] = useState<
-    Record<UploadKey, string | null>
-  >({
-    nidFront: null,
-    nidBack: null,
-    dlFront: null,
-    dlBack: null,
-    passportBio: null,
-    idp: null,
-  });
+  const onSubmit = async (data: RegisterFormData) => {
+    if (!agreeTerms) return;
 
-  const requiredKeys = useMemo<UploadKey[]>(() => {
-    return isInternational
-      ? (["passportBio", "idp"] as const)
-      : (["nidFront", "nidBack", "dlFront", "dlBack"] as const);
-  }, [isInternational]);
+    try {
+      const result = await registerUser(data).unwrap();
+      toast.success("Account created! Please verify your phone number.");
+      // Navigate to OTP verification with the phone number
+      router.push(`/auth/verify-otp?phone=${encodeURIComponent(data.phone)}`);
+    } catch (err) {
+      const error = err as { data?: ApiError; status?: number };
 
-  const personalInfoValid = useMemo(() => {
-    return (
-      formData.fullName.trim() &&
-      formData.email.trim() &&
-      formData.phone.trim() &&
-      formData.dob.trim() &&
-      formData.address.trim()
-    );
-  }, [formData]);
+      if (error.data) {
+        // Map field-level API errors to form fields
+        const fieldMap: Record<string, keyof RegisterFormData> = {
+          email: "email",
+          phone: "phone",
+          first_name: "first_name",
+          last_name: "last_name",
+          password: "password",
+          password_confirm: "password_confirm",
+        };
 
-  const documentsValid = useMemo(() => {
-    return requiredKeys.every((k) => uploadedFiles[k]);
-  }, [requiredKeys, uploadedFiles]);
+        let hasFieldError = false;
+        for (const [apiField, formField] of Object.entries(fieldMap)) {
+          if (error.data[apiField]) {
+            const msg = Array.isArray(error.data[apiField])
+              ? (error.data[apiField] as string[])[0]
+              : (error.data[apiField] as string);
+            setError(formField, { message: msg });
+            hasFieldError = true;
+          }
+        }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+        if (!hasFieldError) {
+          setError("root", {
+            message:
+              error.data.detail || "Registration failed. Please try again.",
+          });
+        }
+      } else {
+        setError("root", {
+          message: "Something went wrong. Please try again.",
+        });
+      }
+    }
   };
 
-  const handleFileUpload =
-    (fileType: UploadKey) => (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = () => {
-        setUploadedFiles((prev) => ({
-          ...prev,
-          [fileType]: reader.result as string,
-        }));
-      };
-      reader.readAsDataURL(file);
-    };
-
-  const handleRemoveFile = (fileType: UploadKey) => {
-    setUploadedFiles((prev) => ({ ...prev, [fileType]: null }));
-  };
-
-  const goNext = () => step === 1 && setStep(2);
-  const goBack = () => step === 2 && setStep(1);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const payload = {
-      formData,
-      isInternational,
-      uploads: requiredKeys.reduce<Record<string, string | null>>((acc, k) => {
-        acc[k] = uploadedFiles[k];
-        return acc;
-      }, {}),
-    };
-
-    console.log("Form submitted:", payload);
-  };
-
-  // Smooth “push” transition between steps
+  // Smooth "push" transition between steps
   const stepVariants = {
-    initial: (direction: number) => ({ opacity: 0, x: direction * 30, y: 8 }),
-    animate: { opacity: 1, x: 0, y: 0 },
-    exit: (direction: number) => ({ opacity: 0, x: direction * -30, y: -8 }),
+    initial: { opacity: 0, y: 8 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -8 },
   };
-
-  const [prevStep, setPrevStep] = useState<Step>(1);
-  const direction = step > prevStep ? 1 : -1;
-
-  // keep prevStep updated
-  React.useEffect(() => {
-    setPrevStep(step);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step]);
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-linear-to-br from-slate-50 to-slate-100 py-8 px-4 sm:py-12">
       {/* Animated background blobs */}
       <AnimatedBackground />
 
-      {/* Local “green primary” theme (no need to change tailwind config) */}
       <div
         className="
           relative z-10
@@ -172,390 +145,339 @@ export function SignupForm() {
             </p>
           </div>
 
-          {/* Stepper */}
-          <div className="mb-8 px-8">
-            <div className="flex items-center justify-between gap-3">
-              <StepPill
-                active={step === 1}
-                done={step > 1}
-                icon={<User className="w-4 h-4" />}
-                title="Personal Info"
-              />
-              <div className="flex-1 h-px bg-border" />
-              <StepPill
-                active={step === 2}
-                done={false}
-                icon={<FileText className="w-4 h-4" />}
-                title="Document Verification"
-              />
-            </div>
+          {/* API / root error */}
+          {errors.root && (
+            <motion.div
+              className="mx-8 mb-4 flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              role="alert"
+            >
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{errors.root.message}</span>
+            </motion.div>
+          )}
 
-            {/* progress bar */}
-            <div className="mt-4 h-2 w-full rounded-full bg-muted overflow-hidden">
-              <motion.div
-                className="h-full rounded-full bg-[#65aa36]"
-                initial={false}
-                animate={{ width: step === 1 ? "50%" : "100%" }}
-                transition={{ type: "spring", stiffness: 220, damping: 26 }}
-              />
-            </div>
-          </div>
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-8 px-8"
+            noValidate
+          >
+            <motion.div
+              variants={stepVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ duration: 0.28, ease: "easeOut" }}
+              className="space-y-6"
+            >
+              {/* Personal Information Section */}
+              <div>
+                <div className="flex items-center gap-2 mb-6">
+                  <User className="w-5 h-5 text-[#65aa36]" />
+                  <h2 className="text-lg font-bold text-foreground">
+                    Personal Information
+                  </h2>
+                </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8 px-8">
-            <AnimatePresence mode="wait" custom={direction}>
-              {step === 1 ? (
-                <motion.div
-                  key="step-1"
-                  custom={direction}
-                  variants={stepVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  transition={{ duration: 0.28, ease: "easeOut" }}
-                  className="space-y-6"
-                >
-                  {/* Personal Information Section */}
-                  <div>
-                    <div className="flex items-center gap-2 mb-6">
-                      <User className="w-5 h-5 text-[#65aa36]" />
-                      <h2 className="text-lg font-bold text-foreground">
-                        Personal Information
-                      </h2>
-                    </div>
-
-                    <div className="space-y-4">
-                      {/* Full Name */}
-                      <div>
-                        <Label
-                          htmlFor="fullName"
-                          className="text-sm font-medium mb-2"
-                        >
-                          Full Name
-                        </Label>
-                        <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                          <Input
-                            id="fullName"
-                            name="fullName"
-                            type="text"
-                            placeholder="John Doe"
-                            value={formData.fullName}
-                            onChange={handleInputChange}
-                            className="pl-10 h-11"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Email and Phone */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label
-                            htmlFor="email"
-                            className="text-sm font-medium mb-2"
-                          >
-                            Email Address
-                          </Label>
-                          <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                            <Input
-                              id="email"
-                              name="email"
-                              type="email"
-                              placeholder="john@example.com"
-                              value={formData.email}
-                              onChange={handleInputChange}
-                              className="pl-10 h-11"
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <Label
-                            htmlFor="phone"
-                            className="text-sm font-medium mb-2"
-                          >
-                            Phone Number
-                          </Label>
-                          <div className="relative">
-                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                            <Input
-                              id="phone"
-                              name="phone"
-                              type="tel"
-                              placeholder="+880 1XXX-XXXXXX"
-                              value={formData.phone}
-                              onChange={handleInputChange}
-                              className="pl-10 h-11"
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Date of Birth and Address */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label
-                            htmlFor="dob"
-                            className="text-sm font-medium mb-2"
-                          >
-                            Date of Birth
-                          </Label>
-                          <div className="relative">
-                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                            <Input
-                              id="dob"
-                              name="dob"
-                              type="date"
-                              value={formData.dob}
-                              onChange={handleInputChange}
-                              className="pl-10 h-11"
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <Label
-                            htmlFor="address"
-                            className="text-sm font-medium mb-2"
-                          >
-                            Address
-                          </Label>
-                          <div className="relative">
-                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                            <Input
-                              id="address"
-                              name="address"
-                              type="text"
-                              placeholder="Street Address, City"
-                              value={formData.address}
-                              onChange={handleInputChange}
-                              className="pl-10 h-11"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Step 1 actions */}
-                  <div className="flex items-center justify-end gap-3 pt-2">
-                    <motion.div whileTap={{ scale: 0.98 }}>
-                      <Button
-                        type="button"
-                        onClick={goNext}
-                        disabled={!personalInfoValid}
-                        className="h-11 bg-[#65aa36] hover:bg-[#65aa36]/90 text-[hsl(var(--primary-foreground))] cursor-pointer"
+                <div className="space-y-4">
+                  {/* First Name & Last Name */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label
+                        htmlFor="first_name"
+                        className="text-sm font-medium mb-2"
                       >
-                        Next <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
-                    </motion.div>
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="step-2"
-                  custom={direction}
-                  variants={stepVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  transition={{ duration: 0.28, ease: "easeOut" }}
-                  className="space-y-6"
-                >
-                  {/* Document Verification Section */}
-                  <div className="border-t pt-8">
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="flex items-center gap-2">
-                        <FileText className="w-5 h-5 text-[#65aa36]" />
-                        <h2 className="text-lg font-bold text-foreground">
-                          Document Verification
-                        </h2>
+                        First Name
+                      </Label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <Input
+                          id="first_name"
+                          type="text"
+                          placeholder="John"
+                          {...register("first_name")}
+                          aria-invalid={!!errors.first_name}
+                          className={`pl-10 h-11 ${errors.first_name ? "border-red-400" : ""}`}
+                        />
                       </div>
-
-                      {/* Toggle with animation */}
-                      <motion.div
-                        layout
-                        className="flex items-center gap-3 rounded-full border bg-white px-3 py-2"
-                      >
-                        <span
-                          className={`text-sm font-medium ${
-                            !isInternational
-                              ? "text-foreground"
-                              : "text-muted-foreground"
-                          }`}
-                        >
-                          National
-                        </span>
-
-                        <motion.div whileTap={{ scale: 0.95 }}>
-                          <Switch
-                            checked={isInternational}
-                            onCheckedChange={(val) => {
-                              setIsInternational(val);
-
-                              // clear uploads when switching type
-                              setUploadedFiles((prev) => ({
-                                ...prev,
-                                nidFront: null,
-                                nidBack: null,
-                                dlFront: null,
-                                dlBack: null,
-                                passportBio: null,
-                                idp: null,
-                              }));
-                            }}
-                            className="data-[state=checked]:bg-[#65aa36]"
-                          />
-                        </motion.div>
-
-                        <span
-                          className={`text-sm font-medium ${
-                            isInternational
-                              ? "text-foreground"
-                              : "text-muted-foreground"
-                          }`}
-                        >
-                          International
-                        </span>
-                      </motion.div>
-                    </div>
-
-                    <AnimatePresence mode="wait">
-                      {/* National (Bangladesh) Documents: 4 files */}
-                      {!isInternational ? (
-                        <motion.div
-                          key="national"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          transition={{ duration: 0.22, ease: "easeOut" }}
-                          className="space-y-6"
-                        >
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <DocumentUploadBox
-                              label="NID Front Side *"
-                              value={uploadedFiles.nidFront}
-                              onUpload={handleFileUpload("nidFront")}
-                              onRemove={() => handleRemoveFile("nidFront")}
-                            />
-                            <DocumentUploadBox
-                              label="NID Back Side *"
-                              value={uploadedFiles.nidBack}
-                              onUpload={handleFileUpload("nidBack")}
-                              onRemove={() => handleRemoveFile("nidBack")}
-                            />
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <DocumentUploadBox
-                              label="Driving License Front Side *"
-                              value={uploadedFiles.dlFront}
-                              onUpload={handleFileUpload("dlFront")}
-                              onRemove={() => handleRemoveFile("dlFront")}
-                            />
-                            <DocumentUploadBox
-                              label="Driving License Back Side *"
-                              value={uploadedFiles.dlBack}
-                              onUpload={handleFileUpload("dlBack")}
-                              onRemove={() => handleRemoveFile("dlBack")}
-                            />
-                          </div>
-                        </motion.div>
-                      ) : (
-                        /* International Documents */
-                        <motion.div
-                          key="international"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          transition={{ duration: 0.22, ease: "easeOut" }}
-                          className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                        >
-                          <DocumentUploadBox
-                            label="Passport Bio Page *"
-                            value={uploadedFiles.passportBio}
-                            onUpload={handleFileUpload("passportBio")}
-                            onRemove={() => handleRemoveFile("passportBio")}
-                          />
-                          <DocumentUploadBox
-                            label="International Driving Permit (IDP) *"
-                            value={uploadedFiles.idp}
-                            onUpload={handleFileUpload("idp")}
-                            onRemove={() => handleRemoveFile("idp")}
-                          />
-                        </motion.div>
+                      {errors.first_name && (
+                        <p className="mt-1 text-sm text-red-600" role="alert">
+                          {errors.first_name.message}
+                        </p>
                       )}
-                    </AnimatePresence>
+                    </div>
+                    <div>
+                      <Label
+                        htmlFor="last_name"
+                        className="text-sm font-medium mb-2"
+                      >
+                        Last Name
+                      </Label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <Input
+                          id="last_name"
+                          type="text"
+                          placeholder="Doe"
+                          {...register("last_name")}
+                          aria-invalid={!!errors.last_name}
+                          className={`pl-10 h-11 ${errors.last_name ? "border-red-400" : ""}`}
+                        />
+                      </div>
+                      {errors.last_name && (
+                        <p className="mt-1 text-sm text-red-600" role="alert">
+                          {errors.last_name.message}
+                        </p>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Terms & Conditions */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="flex items-start gap-3"
-                  >
-                    <Checkbox
-                      id="terms"
-                      name="agreeTerms"
-                      checked={formData.agreeTerms}
-                      onCheckedChange={(checked) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          agreeTerms: checked as boolean,
-                        }))
-                      }
-                      className="mt-1 data-[state=checked]:bg-[#65aa36] data-[state=checked]:border-[#65aa36] cursor-pointer"
-                    />
-                    <Label
-                      htmlFor="terms"
-                      className="text-sm text-foreground cursor-pointer"
+                  {/* Email and Phone */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label
+                        htmlFor="email"
+                        className="text-sm font-medium mb-2"
+                      >
+                        Email Address
+                      </Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="john@example.com"
+                          {...register("email")}
+                          aria-invalid={!!errors.email}
+                          className={`pl-10 h-11 ${errors.email ? "border-red-400" : ""}`}
+                        />
+                      </div>
+                      {errors.email && (
+                        <p className="mt-1 text-sm text-red-600" role="alert">
+                          {errors.email.message}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <Label
+                        htmlFor="phone"
+                        className="text-sm font-medium mb-2"
+                      >
+                        Phone Number
+                      </Label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <Input
+                          id="phone"
+                          type="tel"
+                          placeholder="+880 1XXX-XXXXXX"
+                          {...register("phone")}
+                          aria-invalid={!!errors.phone}
+                          className={`pl-10 h-11 ${errors.phone ? "border-red-400" : ""}`}
+                        />
+                      </div>
+                      {errors.phone && (
+                        <p className="mt-1 text-sm text-red-600" role="alert">
+                          {errors.phone.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Date of Birth and Country */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label
+                        htmlFor="dob"
+                        className="text-sm font-medium mb-2"
+                      >
+                        Date of Birth{" "}
+                        <span className="text-muted-foreground">(optional)</span>
+                      </Label>
+                      <div className="relative">
+                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <Input
+                          id="dob"
+                          type="date"
+                          {...register("dob")}
+                          className="pl-10 h-11"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label
+                        htmlFor="country"
+                        className="text-sm font-medium mb-2"
+                      >
+                        Country{" "}
+                        <span className="text-muted-foreground">(optional)</span>
+                      </Label>
+                      <Input
+                        id="country"
+                        type="text"
+                        placeholder="Bangladesh"
+                        {...register("country")}
+                        className="h-11"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Password */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label
+                        htmlFor="password"
+                        className="text-sm font-medium mb-2"
+                      >
+                        Password
+                      </Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <Input
+                          id="password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Min. 8 characters"
+                          {...register("password")}
+                          aria-invalid={!!errors.password}
+                          className={`pl-10 pr-10 h-11 ${errors.password ? "border-red-400" : ""}`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword((s) => !s)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-green-600 transition-colors"
+                          aria-label={
+                            showPassword ? "Hide password" : "Show password"
+                          }
+                        >
+                          {showPassword ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                      {errors.password && (
+                        <p className="mt-1 text-sm text-red-600" role="alert">
+                          {errors.password.message}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <Label
+                        htmlFor="password_confirm"
+                        className="text-sm font-medium mb-2"
+                      >
+                        Confirm Password
+                      </Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <Input
+                          id="password_confirm"
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder="Re-enter password"
+                          {...register("password_confirm")}
+                          aria-invalid={!!errors.password_confirm}
+                          className={`pl-10 pr-10 h-11 ${errors.password_confirm ? "border-red-400" : ""}`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword((s) => !s)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-green-600 transition-colors"
+                          aria-label={
+                            showConfirmPassword
+                              ? "Hide password"
+                              : "Show password"
+                          }
+                        >
+                          {showConfirmPassword ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                      {errors.password_confirm && (
+                        <p className="mt-1 text-sm text-red-600" role="alert">
+                          {errors.password_confirm.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Terms & Conditions */}
+              <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-start gap-3"
+              >
+                <Checkbox
+                  id="terms"
+                  checked={agreeTerms}
+                  onCheckedChange={(checked) =>
+                    setAgreeTerms(checked as boolean)
+                  }
+                  className="mt-1 data-[state=checked]:bg-[#65aa36] data-[state=checked]:border-[#65aa36] cursor-pointer"
+                />
+                <Label
+                  htmlFor="terms"
+                  className="text-sm text-foreground cursor-pointer"
+                >
+                  <p>
+                    I confirm that the information provided is accurate and I
+                    agree to the{" "}
+                    <Link
+                      href={"#"}
+                      className="text-[#65aa36] hover:underline"
                     >
-                      <p>
-                        I confirm that the information provided is accurate and
-                        I agree to the{" "}
-                        <Link
-                          href={"#"}
-                          className="text-[#65aa36] hover:underline"
-                        >
-                          Terms of Service
-                        </Link>{" "}
-                        and{" "}
-                        <Link
-                          href="#"
-                          className="text-[#65aa36] hover:underline font-medium"
-                        >
-                          Privacy Policy
-                        </Link>
-                      </p>
-                    </Label>
-                  </motion.div>
+                      Terms of Service
+                    </Link>{" "}
+                    and{" "}
+                    <Link
+                      href="#"
+                      className="text-[#65aa36] hover:underline font-medium"
+                    >
+                      Privacy Policy
+                    </Link>
+                  </p>
+                </Label>
+              </motion.div>
 
-                  {/* Step 2 actions */}
-                  <div className="flex items-center justify-between gap-3 pt-2">
-                    <motion.div whileTap={{ scale: 0.98 }}>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={goBack}
-                        className="h-11 cursor-pointer"
-                      >
-                        <ArrowLeft className="w-4 h-4 mr-2" />
-                        Back
-                      </Button>
-                    </motion.div>
-
-                    <motion.div whileTap={{ scale: 0.98 }}>
-                      <Button
-                        type="submit"
-                        disabled={!documentsValid || !formData.agreeTerms}
-                        className="h-11 bg-[#65aa36] hover:bg-[#65aa36]/90 text-[hsl(var(--primary-foreground))] font-semibold cursor-pointer"
-                      >
+              {/* Submit */}
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <motion.div whileTap={{ scale: 0.98 }}>
+                  <Button
+                    type="submit"
+                    disabled={!agreeTerms || isLoading}
+                    className="h-11 bg-[#65aa36] hover:bg-[#65aa36]/90 text-[hsl(var(--primary-foreground))] font-semibold cursor-pointer"
+                  >
+                    {isLoading ? (
+                      <>
+                        <motion.div
+                          className="w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"
+                          animate={{ rotate: 360 }}
+                          transition={{
+                            duration: 1,
+                            repeat: Infinity,
+                            ease: "linear",
+                          }}
+                        />
+                        Creating Account...
+                      </>
+                    ) : (
+                      <>
                         Create Account
-                      </Button>
-                    </motion.div>
-                  </div>
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </>
+                    )}
+                  </Button>
                 </motion.div>
-              )}
-            </AnimatePresence>
+              </div>
+            </motion.div>
+
             {/* Helper */}
             <div className="text-center">
               <p className="text-sm text-muted-foreground pb-4">
@@ -605,127 +527,6 @@ function AnimatedBackground() {
         }}
         transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
       />
-    </div>
-  );
-}
-
-function StepPill({
-  active,
-  done,
-  icon,
-  title,
-}: {
-  active: boolean;
-  done: boolean;
-  icon: React.ReactNode;
-  title: string;
-}) {
-  return (
-    <motion.div
-      layout
-      className={[
-        "flex items-center gap-2 px-3 py-2 rounded-full border text-sm font-medium transition-colors",
-        active
-          ? "border-[#65aa36] text-[#65aa36] bg-[#65aa36]/10"
-          : "border-border text-muted-foreground bg-white",
-      ].join(" ")}
-      animate={{ scale: active ? 1.02 : 1 }}
-      transition={{ type: "spring", stiffness: 260, damping: 22 }}
-    >
-      {done ? <CheckCircle2 className="w-4 h-4 text-[#65aa36]" /> : icon}
-      <span className={active ? "text-foreground" : ""}>{title}</span>
-    </motion.div>
-  );
-}
-
-interface DocumentUploadBoxProps {
-  label: string;
-  value: string | null;
-  onUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onRemove: () => void;
-}
-
-function DocumentUploadBox({
-  label,
-  value,
-  onUpload,
-  onRemove,
-}: DocumentUploadBoxProps) {
-  const uploaded = Boolean(value);
-
-  return (
-    <div>
-      <Label className="text-sm font-medium mb-3 block text-foreground">
-        {label}
-      </Label>
-
-      <motion.div
-        whileHover={{ y: -2 }}
-        whileTap={{ scale: 0.995 }}
-        transition={{ duration: 0.15, ease: "easeOut" }}
-        className="relative border-2 border-dashed border-border rounded-lg p-4 text-center hover:bg-muted/50 transition-colors group"
-      >
-        <input
-          type="file"
-          accept=".jpg,.jpeg,.png,.webp"
-          onChange={onUpload}
-          className="absolute inset-0 opacity-0 cursor-pointer"
-          aria-label={label}
-        />
-
-        {!uploaded ? (
-          <div className="py-8">
-            <FileUp className="w-12 h-12 text-muted-foreground mx-auto mb-3 group-hover:text-[#65aa36] transition-colors" />
-            <p className="text-sm font-medium text-foreground group-hover:text-[#65aa36] transition-colors">
-              Click to upload
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              JPG, PNG or WEBP
-            </p>
-          </div>
-        ) : (
-          <motion.div
-            key="preview"
-            initial={{ opacity: 0, scale: 0.98, y: 6 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-            className="space-y-3"
-          >
-            <div className="relative w-full overflow-hidden rounded-md border bg-muted">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={value!}
-                alt={`${label} preview`}
-                className="w-full h-40 object-cover"
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="text-left">
-                <p className="text-sm font-medium text-[hsl(var(--primary))]">
-                  Uploaded
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Click box to replace
-                </p>
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                className="h-9"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onRemove();
-                }}
-              >
-                Remove
-              </Button>
-            </div>
-          </motion.div>
-        )}
-      </motion.div>
     </div>
   );
 }

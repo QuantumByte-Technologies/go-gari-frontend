@@ -1,108 +1,90 @@
-// components/checkout/CustomerInfo.tsx
 "use client";
 
-// import { Input } from "@/components/ui/Input";
-import type { FormData } from "@/types/checkout";
-import { DEMO_USER } from "@/types/checkout";
-import {
-  Calendar,
-  CheckCircle2,
-  FileText,
-  Mail,
-  Phone,
-  User,
-} from "lucide-react";
-import { Input } from "./Input";
+import { CheckCircle2, Mail, Phone, User } from "lucide-react";
+import type { UserProfile } from "@/types/api/auth";
 
 interface CustomerInfoProps {
-  formData: FormData;
-  errors: Record<string, string>;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  profile: UserProfile | null;
 }
 
-export function CustomerInfo({
-  formData,
-  errors,
-  onChange,
-}: CustomerInfoProps) {
+export function CustomerInfo({ profile }: CustomerInfoProps) {
+  if (!profile) {
+    return (
+      <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+        <h2 className="text-xl font-bold text-gray-900 mb-6">
+          Customer Information
+        </h2>
+        <div className="animate-pulse space-y-3">
+          <div className="h-12 bg-gray-100 rounded-xl" />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="h-10 bg-gray-100 rounded-lg" />
+            <div className="h-10 bg-gray-100 rounded-lg" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const initials = `${profile.first_name?.[0] ?? ""}${profile.last_name?.[0] ?? ""}`.toUpperCase();
+  const fullName = `${profile.first_name} ${profile.last_name}`.trim();
+
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
       <h2 className="text-xl font-bold text-gray-900 mb-6">
         Customer Information
       </h2>
 
-      <div className="bg-[#5E9D34]/5 border border-[#5E9D34]/20 rounded-xl p-4 flex items-center gap-4">
-        <div className="w-12 h-12 bg-gradient-to-br from-[#5E9D34] to-[#4a7d29] rounded-full flex items-center justify-center text-white font-bold text-lg">
-          {DEMO_USER.initials}
+      <div className="bg-[#65AA36]/5 border border-[#65AA36]/20 rounded-xl p-4 flex items-center gap-4">
+        <div className="w-12 h-12 bg-gradient-to-br from-[#65AA36] to-[#4a7d29] rounded-full flex items-center justify-center text-white font-bold text-lg">
+          {initials || <User className="w-5 h-5" />}
         </div>
-        <div>
-          <p className="font-bold text-gray-900">{DEMO_USER.fullName}</p>
-          <p className="text-sm text-gray-600">
-            {DEMO_USER.phone} • {DEMO_USER.email}
+        <div className="min-w-0 flex-1">
+          <p className="font-bold text-gray-900">{fullName || "—"}</p>
+          <p className="text-sm text-gray-600 truncate">
+            {profile.phone ?? "—"} {profile.email ? `\u2022 ${profile.email}` : ""}
           </p>
         </div>
-        <CheckCircle2 className="w-5 h-5 text-[#5E9D34] ml-auto" />
+        <CheckCircle2 className="w-5 h-5 text-[#65AA36] flex-shrink-0" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        <div className="md:col-span-2">
-          <Input
-            label="Full Name"
-            name="fullName"
-            value={formData.fullName}
-            onChange={onChange}
-            error={errors.fullName}
-            icon={<User className="w-4 h-4 text-gray-400" />}
-            placeholder="John Doe"
-            required
-          />
-        </div>
-
-        <Input
-          label="Email Address"
-          name="email"
-          type="email"
-          value={formData.email}
-          onChange={onChange}
-          error={errors.email}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+        <InfoField
+          icon={<User className="w-4 h-4 text-gray-400" />}
+          label="Full Name"
+          value={fullName}
+        />
+        <InfoField
           icon={<Mail className="w-4 h-4 text-gray-400" />}
-          placeholder="john@example.com"
-          required
+          label="Email"
+          value={profile.email}
         />
-
-        <Input
-          label="Phone Number"
-          name="phone"
-          type="tel"
-          value={formData.phone}
-          onChange={onChange}
-          error={errors.phone}
+        <InfoField
           icon={<Phone className="w-4 h-4 text-gray-400" />}
-          placeholder="+880 1XXX-XXXXXX"
-          required
+          label="Phone"
+          value={profile.phone ?? "—"}
         />
+      </div>
+    </div>
+  );
+}
 
-        <Input
-          label="Driving License No."
-          name="license"
-          value={formData.license}
-          onChange={onChange}
-          error={errors.license}
-          icon={<FileText className="w-4 h-4 text-gray-400" />}
-          placeholder="DK-12345678"
-          required
-        />
-
-        <Input
-          label="License Expiry"
-          name="expiry"
-          type="date"
-          value={formData.expiry}
-          onChange={onChange}
-          error={errors.expiry}
-          icon={<Calendar className="w-4 h-4 text-gray-400" />}
-          required
-        />
+function InfoField({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div>
+      <label className="block text-xs font-medium text-gray-500 mb-1">
+        {label}
+      </label>
+      <div className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg bg-gray-50">
+        {icon}
+        <span className="text-sm text-gray-900">{value}</span>
       </div>
     </div>
   );

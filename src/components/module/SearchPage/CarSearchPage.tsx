@@ -1,65 +1,168 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Car, FilterKey, PriceRange } from "@/types/car";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { pageIn } from "@/lib/motion";
+import { useGetCarsQuery } from "@/redux/api/carsApi";
+import type { CarSearchParams } from "@/types/api/cars";
 import SearchHeader from "./SearchHeader";
 import FiltersBar from "./FiltersBar";
 import ResultsHeader from "./ResultsHeader";
 import CarGrid from "./CarGrid";
 import Pagination from "@/components/common/Car-Pagination";
 
-const PRICE_RANGES: PriceRange[] = [
-  { label: "Under $50/day", min: 0, max: 50 },
-  { label: "$50 – $100/day", min: 50, max: 100 },
-  { label: "$100 – $200/day", min: 100, max: 200 },
-  { label: "$200 – $500/day", min: 200, max: 500 },
-  { label: "$500+/day", min: 500, max: Infinity },
-];
+// BDT price ranges
+const PRICE_RANGES = [
+  { label: "Under ৳2,000/day", min: 0, max: 2000 },
+  { label: "৳2,000 – ৳5,000/day", min: 2000, max: 5000 },
+  { label: "৳5,000 – ৳10,000/day", min: 5000, max: 10000 },
+  { label: "৳10,000 – ৳20,000/day", min: 10000, max: 20000 },
+  { label: "৳20,000+/day", min: 20000, max: undefined },
+] as const;
 
-const SEAT_OPTIONS = ["2 Seats", "4 Seats", "5 Seats", "7 Seats", "7+ Seats"];
+const SEAT_OPTIONS = ["2 Seats", "4 Seats", "5 Seats", "7 Seats"];
 const TRANSMISSION_OPTIONS = ["Automatic", "Manual"];
-const FUEL_OPTIONS = ["Petrol", "Diesel", "Electric", "Hybrid"];
-const CAR_TYPE_OPTIONS = [
-  "Sedan",
-  "SUV",
-  "Hatchback",
-  "Luxury",
-  "Microbus",
-  "Convertible",
-];
+const FUEL_OPTIONS = ["Petrol", "Diesel", "Electric", "Hybrid", "CNG"];
+const CAR_TYPE_OPTIONS = ["Economy", "Premium", "SUV"];
 
-export type CarSearchPageProps = {
-  cars: Car[];
-  title?: string;
-  subtitle?: string;
-  locationDefault?: string;
-  dateText?: string;
-};
+type FilterKey = "price" | "seats" | "transmission" | "fuel" | "carType";
 
-export default function CarSearchPage({
-  cars,
-  title = "124 cars available in Dhaka",
-  subtitle = "Found results matching your filters on Dec 18 - Dec 22",
-  locationDefault = "Dhaka",
-  dateText = "Dec 18 - Dec 22",
-}: CarSearchPageProps) {
+/**
+ * Read a search param as string or null.
+ */
+function param(sp: URLSearchParams, key: string): string | null {
+  return sp.get(key) || null;
+}
+
+export default function CarSearchPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [favorites, setFavorites] = useState<number[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const [selfDrive, setSelfDrive] = useState(true);
-  const [chauffeur, setChauffeur] = useState(false);
-
   const [openFilter, setOpenFilter] = useState<FilterKey | null>(null);
-  const [selectedPrice, setSelectedPrice] = useState<string | null>(null);
-  const [selectedSeats, setSelectedSeats] = useState<string | null>(null);
-  const [selectedTransmission, setSelectedTransmission] = useState<
-    string | null
-  >(null);
-  const [selectedFuel, setSelectedFuel] = useState<string | null>(null);
-  const [selectedCarType, setSelectedCarType] = useState<string | null>(null);
+
+  // ── Read filter state from URL search params ──────────────────
+  const currentPage = Number(searchParams.get("page") ?? 1);
+  const selectedPrice = param(searchParams, "price_label");
+  const selectedSeats = param(searchParams, "seats_label");
+  const selectedTransmission = param(searchParams, "transmission_label");
+  const selectedFuel = param(searchParams, "fuel_label");
+  const selectedCarType = param(searchParams, "category_label");
+  const searchQuery = param(searchParams, "search");
+  const selfDrive = searchParams.get("drive") !== "chauffeur";
+  const chauffeur = searchParams.get("drive") !== "self";
+
+  // ── Build API query params from URL ───────────────────────────
+  const queryParams = useMemo<CarSearchParams>(() => {
+    const params: CarSearchParams = { page: currentPage };
+
+    // Search
+    const search = searchParams.get("search");
+    if (search) params.search = search;
+
+    // City
+    const city = searchParams.get("city");
+    if (city) params.city = city;
+
+    // Drive option
+    const drive = searchParams.get("drive");
+    if (drive === "self") params.drive_option = "self_drive_only";
+    else if (drive === "chauffeur") params.drive_option = "chauffeur_only";
+
+    // Price range
+    if (selectedPrice) {
+      const range = PRICE_RANGES.find((r) => r.label === selectedPrice);
+      if (range) {
+        params.min_price = range.min;
+        if (range.max !== undefined) params.max_price = range.max;
+      }
+    }
+
+    // Seats
+    if (selectedSeats) {
+      const n = parseInt(selectedSeats, 10);
+      if (!Number.isNaN(n)) params.seats = n;
+    }
+
+    // Transmission
+    if (selectedTransmission) {
+      params.transmission =
+        selectedTransmission === "Automatic" ? "auto" : "manual";
+    }
+
+    // Fuel type
+    if (selectedFuel) {
+      const fuelMap: Record<string, CarSearchParams["fuel_type"]> = {
+        Petrol: "petrol",
+        Diesel: "diesel",
+        Electric: "electric",
+        Hybrid: "hybrid",
+        CNG: "cng",
+      };
+      params.fuel_type = fuelMap[selectedFuel];
+    }
+
+    // Category
+    if (selectedCarType) {
+      const catMap: Record<string, CarSearchParams["category"]> = {
+        Economy: "economy",
+        Premium: "premium",
+        SUV: "suv",
+      };
+      params.category = catMap[selectedCarType];
+    }
+
+    // Dates
+    const start = searchParams.get("start_date");
+    const end = searchParams.get("end_date");
+    if (start) params.start_date = start;
+    if (end) params.end_date = end;
+
+    // Ordering
+    const ordering = searchParams.get("ordering");
+    if (ordering) params.ordering = ordering;
+
+    return params;
+  }, [
+    currentPage,
+    searchParams,
+    selectedPrice,
+    selectedSeats,
+    selectedTransmission,
+    selectedFuel,
+    selectedCarType,
+  ]);
+
+  // ── API call ──────────────────────────────────────────────────
+  const { data, isLoading, isFetching, isError, error, refetch } =
+    useGetCarsQuery(queryParams);
+
+  const totalCount = data?.count ?? 0;
+  const cars = data?.results ?? [];
+  const totalPages = Math.ceil(totalCount / 10); // Assuming 10 per page
+
+  // ── URL updater ───────────────────────────────────────────────
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const sp = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === null) {
+          sp.delete(key);
+        } else {
+          sp.set(key, value);
+        }
+      }
+      // Reset to page 1 when filters change
+      if (!("page" in updates)) {
+        sp.delete("page");
+      }
+      router.push(`${pathname}?${sp.toString()}`, { scroll: false });
+    },
+    [searchParams, router, pathname],
+  );
 
   const activeFilterCount = [
     selectedPrice,
@@ -78,72 +181,25 @@ export default function CarSearchPage({
   };
 
   const clearAllFilters = () => {
-    setSelectedPrice(null);
-    setSelectedSeats(null);
-    setSelectedTransmission(null);
-    setSelectedFuel(null);
-    setSelectedCarType(null);
+    updateParams({
+      price_label: null,
+      seats_label: null,
+      transmission_label: null,
+      fuel_label: null,
+      category_label: null,
+    });
   };
 
-  // ✅ Filtering logic
-  const filteredCars = useMemo(() => {
-    let list = cars;
-
-    // Drive type (if only one selected)
-    if (selfDrive !== chauffeur) {
-      list = list.filter((c) =>
-        selfDrive ? c.driveType === "SELF-DRIVE" : c.driveType === "CHAUFFEUR",
-      );
-    }
-
-    // Price
-    if (selectedPrice) {
-      const range = PRICE_RANGES.find((r) => r.label === selectedPrice);
-      if (range)
-        list = list.filter((c) => c.price >= range.min && c.price < range.max);
-    }
-
-    // Seats
-    if (selectedSeats) {
-      const n = parseInt(selectedSeats, 10);
-      if (!Number.isNaN(n))
-        list = list.filter((c) =>
-          selectedSeats.includes("+") ? c.seats >= n : c.seats === n,
-        );
-    }
-
-    // Transmission
-    if (selectedTransmission) {
-      list = list.filter((c) =>
-        selectedTransmission === "Automatic"
-          ? c.transmission === "Auto"
-          : c.transmission === "Manual",
-      );
-    }
-
-    // Fuel
-    if (selectedFuel)
-      list = list.filter(
-        (c) => c.fuelType.toLowerCase() === selectedFuel.toLowerCase(),
-      );
-
-    // Car type
-    if (selectedCarType)
-      list = list.filter(
-        (c) => c.carType.toLowerCase() === selectedCarType.toLowerCase(),
-      );
-
-    return list;
-  }, [
-    cars,
-    selfDrive,
-    chauffeur,
-    selectedPrice,
-    selectedSeats,
-    selectedTransmission,
-    selectedFuel,
-    selectedCarType,
-  ]);
+  // ── Derived display text ──────────────────────────────────────
+  const city = searchParams.get("city") ?? "Dhaka";
+  const title = isLoading
+    ? "Searching..."
+    : `${totalCount} car${totalCount !== 1 ? "s" : ""} available in ${city}`;
+  const subtitle = isLoading
+    ? "Looking for the best cars for you"
+    : totalCount > 0
+      ? "Results matching your filters"
+      : "Try adjusting your filters";
 
   return (
     <motion.main
@@ -153,12 +209,20 @@ export default function CarSearchPage({
       className="min-h-screen bg-gray-50"
     >
       <SearchHeader
-        locationDefault={locationDefault}
-        dateText={dateText}
+        locationDefault={city}
         selfDrive={selfDrive}
         chauffeur={chauffeur}
-        onToggleSelfDrive={() => setSelfDrive((v) => !v)}
-        onToggleChauffeur={() => setChauffeur((v) => !v)}
+        onSearch={(q: string) => updateParams({ search: q || null })}
+        onToggleSelfDrive={() =>
+          updateParams({
+            drive: selfDrive && !chauffeur ? null : "self",
+          })
+        }
+        onToggleChauffeur={() =>
+          updateParams({
+            drive: chauffeur && !selfDrive ? null : "chauffeur",
+          })
+        }
       />
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -166,15 +230,17 @@ export default function CarSearchPage({
           openFilter={openFilter}
           setOpenFilter={setOpenFilter}
           selectedPrice={selectedPrice}
-          setSelectedPrice={setSelectedPrice}
+          setSelectedPrice={(v) => updateParams({ price_label: v })}
           selectedSeats={selectedSeats}
-          setSelectedSeats={setSelectedSeats}
+          setSelectedSeats={(v) => updateParams({ seats_label: v })}
           selectedTransmission={selectedTransmission}
-          setSelectedTransmission={setSelectedTransmission}
+          setSelectedTransmission={(v) =>
+            updateParams({ transmission_label: v })
+          }
           selectedFuel={selectedFuel}
-          setSelectedFuel={setSelectedFuel}
+          setSelectedFuel={(v) => updateParams({ fuel_label: v })}
           selectedCarType={selectedCarType}
-          setSelectedCarType={setSelectedCarType}
+          setSelectedCarType={(v) => updateParams({ category_label: v })}
           activeFilterCount={activeFilterCount}
           onClearAll={clearAllFilters}
           viewMode={viewMode}
@@ -191,13 +257,22 @@ export default function CarSearchPage({
         <ResultsHeader title={title} subtitle={subtitle} />
 
         <CarGrid
-          cars={filteredCars}
+          cars={cars}
           viewMode={viewMode}
           favorites={favorites}
           onToggleFavorite={toggleFavorite}
+          isLoading={isLoading || isFetching}
+          isError={isError}
+          onRetry={refetch}
         />
 
-        <Pagination currentPage={currentPage} onChange={setCurrentPage} />
+        {totalPages > 1 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onChange={(p) => updateParams({ page: String(p) })}
+          />
+        )}
       </section>
     </motion.main>
   );

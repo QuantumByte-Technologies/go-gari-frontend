@@ -3,7 +3,6 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { EASE_OUT } from "@/lib/motion";
-// import { EASE_OUT } from "@/lib/motion";
 
 export default function ResultsHeader({
   title,

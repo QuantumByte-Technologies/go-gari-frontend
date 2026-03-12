@@ -1,18 +1,44 @@
 // components/car/Specifications.tsx
-import { CarData } from "@/types/carType";
-import { Gauge, Lightning, BatteryFull, GearSix } from "@phosphor-icons/react";
-// import type { CarData } from "@/types";
+import type { CarDetail } from "@/types/api/cars";
+import { Gauge, GasPump, GearSix, UsersThree } from "@phosphor-icons/react";
 
 interface Props {
-  car: CarData;
+  car: CarDetail;
+}
+
+/** Human-readable transmission label */
+function transmissionLabel(t: CarDetail["transmission"]): string {
+  return t === "auto" ? "Automatic" : "Manual";
+}
+
+/** Human-readable fuel type label */
+function fuelLabel(f: CarDetail["fuel_type"]): string {
+  const map: Record<CarDetail["fuel_type"], string> = {
+    petrol: "Petrol",
+    diesel: "Diesel",
+    electric: "Electric",
+    hybrid: "Hybrid",
+    cng: "CNG",
+  };
+  return map[f];
+}
+
+/** Human-readable drive option label */
+function driveLabel(d: CarDetail["drive_option"]): string {
+  const map: Record<CarDetail["drive_option"], string> = {
+    both: "Self / Chauffeur",
+    self_drive_only: "Self Drive Only",
+    chauffeur_only: "Chauffeur Only",
+  };
+  return map[d];
 }
 
 export function CarSpecifications({ car }: Props) {
   const items = [
-    { icon: Gauge, label: "Top Speed", value: car.specs.speed },
-    { icon: Lightning, label: "0-60 mph", value: car.specs.acceleration },
-    { icon: BatteryFull, label: "Range", value: car.specs.range },
-    { icon: GearSix, label: "Drive", value: car.specs.drive },
+    { icon: UsersThree, label: "Seats", value: `${car.seats} Seats` },
+    { icon: GearSix, label: "Transmission", value: transmissionLabel(car.transmission) },
+    { icon: GasPump, label: "Fuel Type", value: fuelLabel(car.fuel_type) },
+    { icon: Gauge, label: "Drive Option", value: driveLabel(car.drive_option) },
   ];
 
   return (

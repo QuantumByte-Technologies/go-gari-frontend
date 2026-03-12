@@ -1,54 +1,62 @@
-import { RentalMode } from "@/types/checkout";
+// ─── Booking Draft type (matches what PricingCard writes to localStorage) ──
+import type { DriveType } from "@/types/api/bookings";
 
-// utils/checkout.ts
-export const calculateTotalDays = (
-  rentalMode: RentalMode,
-  daysCount: number,
-  weeksCount: number,
-  monthlyStart: string,
-  monthlyEnd: string,
-): number => {
-  switch (rentalMode) {
-    case "days":
-      return daysCount;
-    case "weekly":
-      return weeksCount * 7;
-    case "monthly":
-      if (monthlyStart && monthlyEnd) {
-        const start = new Date(monthlyStart);
-        const end = new Date(monthlyEnd);
-        const diff = Math.ceil(
-          (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24),
-        );
-        return Math.max(1, diff);
-      }
-      return 30;
-    default:
-      return 1;
+export interface BookingDraftPricing {
+  numDays: number;
+  ratePerDay: string;
+  subtotal: string;
+  discountPercentage: string;
+  discountAmount: string;
+  grandTotal: string;
+}
+
+export interface BookingDraft {
+  carId: number;
+  carName: string;
+  startDate: string; // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
+  pickupTime: string;
+  dropoffTime: string;
+  driveType: DriveType;
+  pricing: BookingDraftPricing | null;
+}
+
+/** Read and validate the booking draft from localStorage */
+export function getBookingDraft(): BookingDraft | null {
+  try {
+    const raw = localStorage.getItem("booking_draft");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+
+    // Basic validation
+    if (
+      typeof parsed.carId !== "number" ||
+      typeof parsed.carName !== "string" ||
+      typeof parsed.startDate !== "string" ||
+      typeof parsed.endDate !== "string" ||
+      typeof parsed.driveType !== "string"
+    ) {
+      return null;
+    }
+
+    return parsed as BookingDraft;
+  } catch {
+    return null;
   }
-};
+}
 
-export const getRentalLabel = (
-  rentalMode: RentalMode,
-  daysCount: number,
-  weeksCount: number,
-  totalDays: number,
-  monthlyStart: string,
-  monthlyEnd: string,
-): string => {
-  switch (rentalMode) {
-    case "days":
-      return `${daysCount} day${daysCount > 1 ? "s" : ""}`;
-    case "weekly":
-      return `${weeksCount} week${weeksCount > 1 ? "s" : ""} (${totalDays} days)`;
-    case "monthly":
-      if (monthlyStart && monthlyEnd) return `${totalDays} days`;
-      return "30 days";
-    default:
-      return "";
+/** Clear the booking draft from localStorage */
+export function clearBookingDraft(): void {
+  try {
+    localStorage.removeItem("booking_draft");
+  } catch {
+    // Ignore
   }
-};
+}
 
-export const validateEmail = (email: string): boolean => {
-  return /\S+@\S+\.\S+/.test(email);
-};
+/** Format a BDT amount from a decimal string or number */
+export function formatBDT(value: string | number): string {
+  const num = typeof value === "number" ? value : parseFloat(value);
+  if (Number.isNaN(num)) return `৳${value}`;
+  return `৳${num.toLocaleString("en-BD", { maximumFractionDigits: 0 })}`;
+}

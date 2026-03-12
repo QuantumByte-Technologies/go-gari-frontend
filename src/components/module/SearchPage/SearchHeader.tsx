@@ -3,13 +3,12 @@
 import React from "react";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import DriveTypeToggle from "./DriveTypeToggle";
-// import DriveTypeToggle from "./DriveTypeToggle";
 
 type Props = {
   locationDefault: string;
-  dateText: string;
   selfDrive: boolean;
   chauffeur: boolean;
+  onSearch?: (query: string) => void;
   onToggleSelfDrive: () => void;
   onToggleChauffeur: () => void;
 };
@@ -18,9 +17,16 @@ export default function SearchHeader({
   locationDefault,
   selfDrive,
   chauffeur,
+  onSearch,
   onToggleSelfDrive,
   onToggleChauffeur,
 }: Props) {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && onSearch) {
+      onSearch(e.currentTarget.value);
+    }
+  };
+
   return (
     <div className="bg-white border-b border-gray-200 pt-24 pb-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -36,6 +42,7 @@ export default function SearchHeader({
                 type="text"
                 defaultValue={locationDefault}
                 placeholder="Dhaka"
+                onKeyDown={handleKeyDown}
                 className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#5E9D34] focus:border-transparent outline-none"
               />
             </div>

@@ -3,7 +3,7 @@
 // components/car/ImageGallery.tsx
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { cn } from "@/utils/utils";
+import { cn } from "@/lib/utils";
 
 interface Props {
   name: string;

@@ -23,12 +23,6 @@ import { FieldSelect } from "../module/Hero/FieldSelect";
 import { FieldInput } from "../module/Hero/FieldInput";
 import { SelectedCarBanner } from "../module/Hero/SelectedCarBanner";
 
-// import { DriveTypeToggle } from "./DriveTypeToggle";
-// import { CarTypeGrid } from "./CarTypeGrid";
-// import { FieldSelect } from "./FieldSelect";
-// import { FieldInput } from "./FieldInput";
-// import { SelectedCarBanner } from "./SelectedCarBanner";
-
 export function BookingModule() {
   const router = useRouter();
 

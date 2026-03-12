@@ -1,7 +1,6 @@
 // components/car/CancellationPolicy.tsx
 import { CheckCircle, Warning, XCircle } from "@phosphor-icons/react";
 import { PolicyCard } from "./ui";
-// import { PolicyCard } from "@/components/ui";
 
 export function CancellationPolicy() {
   return (
