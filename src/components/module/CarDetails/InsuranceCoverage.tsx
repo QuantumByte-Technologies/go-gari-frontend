@@ -48,7 +48,7 @@ export function InsuranceCoverage() {
 
         <div className="relative overflow-hidden rounded-xl border-2 border-amber-100 bg-white p-6">
           <div className="absolute right-0 top-0 rounded-bl-xl bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">
-            +$15/DAY
+            OPTIONAL ADD-ON
           </div>
 
           <div className="mb-4 flex items-center gap-3">

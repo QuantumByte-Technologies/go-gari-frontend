@@ -1,20 +1,19 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
-// import type { FilterKey } from "@/types/car";
 import {
   SquaresFour,
   ListBullets,
-  CurrencyDollar,
+  Money,
   Armchair,
   GearSix,
   Drop,
   Car,
   X,
 } from "@phosphor-icons/react";
-import { FilterKey } from "@/types/car";
 import FilterDropdown from "./FilterDropdown";
-// import FilterDropdown from "./FilterDropdown";
+
+export type FilterKey = "price" | "seats" | "transmission" | "fuel" | "carType";
 
 type Props = {
   openFilter: FilterKey | null;
@@ -70,7 +69,7 @@ export default function FiltersBar(props: Props) {
       <div className="flex items-center gap-2.5 flex-wrap">
         <FilterDropdown
           filterKey="price"
-          icon={CurrencyDollar}
+          icon={Money}
           label="Price Range"
           openFilter={props.openFilter}
           setOpenFilter={props.setOpenFilter}

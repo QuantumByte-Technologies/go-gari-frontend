@@ -1,12 +1,10 @@
 "use client";
 
 import React from "react";
-// import type { FilterKey } from "@/types/car";
 import { AnimatePresence, motion } from "framer-motion";
 import { CaretDown, CheckCircle, X } from "@phosphor-icons/react";
-import { FilterKey } from "@/types/car";
+import type { FilterKey } from "./FiltersBar";
 import { EASE_OUT } from "@/lib/motion";
-// import { EASE_OUT } from "@/lib/motion";
 
 type Props = {
   filterKey: FilterKey;

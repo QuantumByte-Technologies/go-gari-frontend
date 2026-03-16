@@ -1,32 +1,18 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { CaretRight } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
-import { TabType } from "@/types/dashboard/types";
+import type { TabType } from "@/types/dashboard/types";
 import { TAB_LABELS } from "@/types/dashboard/constants";
-import {
-  MOCK_CARS,
-  MOCK_MESSAGES,
-  MOCK_TRIPS,
-  MOCK_USER,
-} from "@/types/dashboard/data";
+import { useGetUnreadCountQuery } from "@/redux/api/notificationsApi";
 import TripsSection from "./TripsSection";
 import ProfileSection from "./ProfileSection";
 import CarsSection from "./CarsSection";
 import SupportSection from "./SupportSection";
 import InboxSection from "./InboxSection";
 import DashboardTabs from "./DashboardTabs";
-
-// import DashboardTabs from "./DashboardTabs";
-
-// import TripsSection from "./sections/TripsSection";
-// import ProfileSection from "./sections/ProfileSection";
-// import CarsSection from "./sections/CarsSection";
-// import SupportSection from "./sections/SupportSection";
-// import InboxSection from "./sections/InboxSection";
 
 type Props = {
   initialTab?: string;
@@ -36,67 +22,33 @@ export default function UserDashboard({ initialTab }: Props) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("trips");
 
-  const unreadCount = useMemo(
-    () => MOCK_MESSAGES.filter((m) => m.unread).length,
-    [],
-  );
+  // Fetch unread notification count from the API
+  const { data: unreadData } = useGetUnreadCountQuery();
+  const unreadCount = unreadData?.count ?? 0;
 
   useEffect(() => {
     const tab = initialTab as TabType | undefined;
     if (tab && TAB_LABELS[tab]) setActiveTab(tab);
   }, [initialTab]);
 
-  // navigation handlers (same idea as your props callbacks)
   const onNavigateToHome = useCallback(() => router.push("/"), [router]);
-  const onNavigateToSearch = useCallback(
-    () => router.push("/search"),
-    [router],
-  );
-  const onNavigateToDetails = useCallback(
-    (carId: number) => router.push(`/cars/${carId}`),
-    [router],
-  );
-  const onNavigateToModifyBooking = useCallback(
-    (bookingId: string) => router.push(`/dashboard/booking/${bookingId}`),
-    [router],
-  );
 
   const content = useMemo(() => {
     switch (activeTab) {
       case "trips":
-        return (
-          <TripsSection
-            trips={MOCK_TRIPS}
-            onNavigateToSearch={onNavigateToSearch}
-            onNavigateToDetails={onNavigateToDetails}
-            onNavigateToModifyBooking={onNavigateToModifyBooking}
-          />
-        );
+        return <TripsSection />;
       case "profile":
-        return <ProfileSection user={MOCK_USER} />;
+        return <ProfileSection />;
       case "cars":
-        return (
-          <CarsSection
-            cars={MOCK_CARS}
-            onNavigateToDetails={onNavigateToDetails}
-          />
-        );
+        return <CarsSection />;
       case "support":
         return <SupportSection />;
       case "inbox":
-        return (
-          <InboxSection messages={MOCK_MESSAGES} unreadCount={unreadCount} />
-        );
+        return <InboxSection />;
       default:
         return null;
     }
-  }, [
-    activeTab,
-    onNavigateToDetails,
-    onNavigateToModifyBooking,
-    onNavigateToSearch,
-    unreadCount,
-  ]);
+  }, [activeTab]);
 
   return (
     <div className="pt-20">

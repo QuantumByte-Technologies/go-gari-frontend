@@ -1,187 +1,177 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @next/next/no-img-element */
-// app/checkout/[carId]/page.tsx
 "use client";
 
-import { useState, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Shield, CheckCircle2, Loader2, AlertTriangle } from "lucide-react";
 import { VehicleCard } from "./VehicleCard";
 import { CustomerInfo } from "./CustomerInfo";
 import { PaymentMethod } from "./PaymentMethod";
-import {
-  CAR_DATA,
-  DEMO_USER,
-  FormData,
-  InsurancePlan,
-  PaymentMethod as PaymentMethodType,
-  RentalMode,
-  WalletProvider,
-} from "@/types/checkout";
-import { RentalPeriod } from "./RentalPeriod";
-import { InsuranceSelector } from "./InsuranceSelector";
-import { CheckCircle2, Shield } from "lucide-react";
-import {
-  calculateTotalDays,
-  getRentalLabel,
-  validateEmail,
-} from "@/utils/checkout";
 import { Breadcrumb } from "./Breadcrumb";
-// import { Breadcrumb } from "@/components/ui/Breadcrumb";
-// import { VehicleCard } from "@/components/checkout/VehicleCard";
-// import { CustomerInfo } from "@/components/checkout/CustomerInfo";
-// import { PaymentMethod } from "@/components/checkout/PaymentMethod";
-// import { RentalPeriod } from "@/components/checkout/RentalPeriod";
-// import { InsuranceSelector } from "@/components/checkout/InsuranceSelector";
-// import { OrderSummary } from "@/components/checkout/OrderSummary";
-// import { CAR_DATA, DEMO_USER } from "@/types/checkout";
-// import {
-//   calculateTotalDays,
-//   getRentalLabel,
-//   validateEmail,
-// } from "@/utils/checkout";
-// import type {
-//   RentalMode,
-//   PaymentMethod as PaymentMethodType,
-//   WalletProvider,
-//   InsurancePlan,
-//   FormData,
-// } from "@/types/checkout";
+import { useCreateBookingMutation } from "@/redux/api/bookingsApi";
+import { useInitiatePaymentMutation } from "@/redux/api/paymentsApi";
+import { useGetProfileQuery } from "@/redux/api/authApi";
+import { selectIsAuthenticated } from "@/redux/features/auth/authSlice";
+import { useSelector } from "react-redux";
+import {
+  getBookingDraft,
+  clearBookingDraft,
+  formatBDT,
+  type BookingDraft,
+} from "@/utils/checkout";
+import type { BookingCreateRequest } from "@/types/api/bookings";
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const params = useParams();
-  const carId = Number(params.carId);
+  const isAuthenticated = useSelector(selectIsAuthenticated);
 
-  // State
-  const [paymentMethod, setPaymentMethod] =
-    useState<PaymentMethodType>("wallet");
-  const [walletProvider, setWalletProvider] = useState<WalletProvider>("bkash");
-  const [insurancePlan, setInsurancePlan] = useState<InsurancePlan>("basic");
-  const [termsAccepted, setTermsAccepted] = useState(false);
+  // ─── Booking draft from localStorage ──────────────────────────
+  const [draft, setDraft] = useState<BookingDraft | null>(null);
+  const [draftLoaded, setDraftLoaded] = useState(false);
 
-  // Rental period state
-  const [rentalMode, setRentalMode] = useState<RentalMode>("days");
-  const [daysCount, setDaysCount] = useState(3);
-  const [weeksCount, setWeeksCount] = useState(1);
-  const [monthlyStart, setMonthlyStart] = useState("");
-  const [monthlyEnd, setMonthlyEnd] = useState("");
-  const [pickupTime, setPickupTime] = useState("10:00");
-  const [dropoffTime, setDropoffTime] = useState("10:00");
+  useEffect(() => {
+    const d = getBookingDraft();
+    setDraft(d);
+    setDraftLoaded(true);
+  }, []);
 
-  // Form state
-  const [formData, setFormData] = useState<FormData>({
-    fullName: DEMO_USER.fullName,
-    email: DEMO_USER.email,
-    phone: DEMO_USER.phone,
-    license: "",
-    expiry: "",
-    walletNumber: "",
-    cardNumber: "",
-    cardExpiry: "",
-    cardCvv: "",
-    cardName: "",
+  // ─── Redirect if not authenticated ────────────────────────────
+  useEffect(() => {
+    if (draftLoaded && !isAuthenticated) {
+      router.push("/auth/signin");
+    }
+  }, [draftLoaded, isAuthenticated, router]);
+
+  // ─── Profile query ────────────────────────────────────────────
+  const { data: profile } = useGetProfileQuery(undefined, {
+    skip: !isAuthenticated,
   });
 
+  // ─── Location state ───────────────────────────────────────────
+  const [pickupAddress, setPickupAddress] = useState("");
+  const [dropoffAddress, setDropoffAddress] = useState("");
+  const [sameAsPickup, setSameAsPickup] = useState(true);
+
+  // ─── Terms acceptance ─────────────────────────────────────────
+  const [termsAccepted, setTermsAccepted] = useState(false);
+
+  // ─── Mutations ────────────────────────────────────────────────
+  const [createBooking, { isLoading: isCreating }] =
+    useCreateBookingMutation();
+  const [initiatePayment, { isLoading: isInitiating }] =
+    useInitiatePaymentMutation();
+
+  const isSubmitting = isCreating || isInitiating;
+
+  // ─── Form validation ──────────────────────────────────────────
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Constants
-  const selfDriveDiscount = 30;
-  const insuranceFee = 32.5;
-  const premiumInsuranceFee = 18.5;
-  const isSelfDrive = true;
-
-  // Calculations
-  const totalDays = useMemo(
-    () =>
-      calculateTotalDays(
-        rentalMode,
-        daysCount,
-        weeksCount,
-        monthlyStart,
-        monthlyEnd,
-      ),
-    [rentalMode, daysCount, weeksCount, monthlyStart, monthlyEnd],
-  );
-
-  const rentalLabel = useMemo(
-    () =>
-      getRentalLabel(
-        rentalMode,
-        daysCount,
-        weeksCount,
-        totalDays,
-        monthlyStart,
-        monthlyEnd,
-      ),
-    [rentalMode, daysCount, weeksCount, totalDays, monthlyStart, monthlyEnd],
-  );
-
-  const subtotal = CAR_DATA.price * totalDays;
-  const totalInsurance =
-    insurancePlan === "premium"
-      ? insuranceFee + premiumInsuranceFee * totalDays
-      : insuranceFee;
-  const total =
-    subtotal -
-    (isSelfDrive ? selfDriveDiscount * totalDays : 0) +
-    totalInsurance;
-
-  // Handlers
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-
-    if (errors[name]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-  };
-
-  const validateForm = (): boolean => {
+  const validate = useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.fullName) newErrors.fullName = "Full name is required";
-    if (!formData.email || !validateEmail(formData.email)) {
-      newErrors.email = "Valid email is required";
+    if (!pickupAddress.trim()) {
+      newErrors.pickupAddress = "Pickup address is required";
     }
-    if (!formData.phone) newErrors.phone = "Phone number is required";
-    if (!formData.license) newErrors.license = "Driving license is required";
-    if (!formData.expiry) newErrors.expiry = "License expiry is required";
-
-    if (paymentMethod === "wallet") {
-      if (!formData.walletNumber || formData.walletNumber.length < 11) {
-        newErrors.walletNumber = "Valid wallet number is required";
-      }
-    } else {
-      if (!formData.cardNumber || formData.cardNumber.length < 16) {
-        newErrors.cardNumber = "Valid card number is required";
-      }
-      if (!formData.cardExpiry)
-        newErrors.cardExpiry = "Expiry date is required";
-      if (!formData.cardCvv || formData.cardCvv.length < 3) {
-        newErrors.cardCvv = "CVV is required";
-      }
-      if (!formData.cardName)
-        newErrors.cardName = "Cardholder name is required";
+    if (!sameAsPickup && !dropoffAddress.trim()) {
+      newErrors.dropoffAddress = "Drop-off address is required";
+    }
+    if (!termsAccepted) {
+      newErrors.terms = "You must accept the terms and conditions";
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [pickupAddress, dropoffAddress, sameAsPickup, termsAccepted]);
 
-  const handleSubmit = () => {
-    if (validateForm() && termsAccepted) {
-      // Navigate to user dashboard or show success
-      router.push("/dashboard/bookings");
+  // ─── Submit handler ───────────────────────────────────────────
+  const handleSubmit = async () => {
+    if (!draft || !validate()) return;
+
+    const bookingPayload: BookingCreateRequest = {
+      car_id: draft.carId,
+      start_date: draft.startDate,
+      end_date: draft.endDate,
+      drive_type: draft.driveType,
+      pickup_location: {
+        address: pickupAddress.trim(),
+      },
+      dropoff_location: {
+        address: sameAsPickup
+          ? pickupAddress.trim()
+          : dropoffAddress.trim(),
+      },
+    };
+
+    try {
+      // Step 1: Create booking
+      const booking = await createBooking(bookingPayload).unwrap();
+      toast.success("Booking created successfully!");
+
+      // Step 2: Initiate SSLCommerz payment
+      try {
+        const payment = await initiatePayment({
+          booking_id: booking.id,
+        }).unwrap();
+
+        // Step 3: Clean up and redirect to SSLCommerz
+        clearBookingDraft();
+        window.location.href = payment.payment_url;
+      } catch {
+        // Payment initiation failed — booking was created though
+        toast.error(
+          "Payment could not be initiated. You can pay from your dashboard.",
+        );
+        clearBookingDraft();
+        router.push("/dashboard");
+      }
+    } catch (err: unknown) {
+      const apiErr = err as { data?: { detail?: string } };
+      toast.error(
+        apiErr?.data?.detail ?? "Failed to create booking. Please try again.",
+      );
     }
   };
 
+  // ─── Loading / no-draft states ────────────────────────────────
+  if (!draftLoaded) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#65AA36]" />
+      </div>
+    );
+  }
+
+  if (!draft) {
+    return (
+      <div className="min-h-screen bg-gray-50 font-sans">
+        <main className="pt-24 pb-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <AlertTriangle className="w-16 h-16 text-amber-500 mb-4" />
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              No Booking Information Found
+            </h1>
+            <p className="text-gray-600 mb-6 max-w-md">
+              It looks like you haven&apos;t selected a car to book yet. Please
+              browse our cars and select your dates to continue.
+            </p>
+            <button
+              onClick={() => router.push("/search-cars")}
+              className="bg-[#65AA36] text-white px-6 py-3 rounded-xl font-semibold hover:brightness-95 transition-all"
+            >
+              Browse Cars
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   const breadcrumbItems = [
     { label: "Home", href: "/" },
-    { label: "Car Details", onClick: () => router.back() },
+    {
+      label: "Car Details",
+      onClick: () => router.push(`/search-cars/${draft.carId}`),
+    },
   ];
 
   return (
@@ -192,21 +182,95 @@ export default function CheckoutPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
           {/* Left Column - Forms */}
           <div className="lg:col-span-7 space-y-8">
-            <VehicleCard car={CAR_DATA} rentalLabel={rentalLabel} />
-            <CustomerInfo
-              formData={formData}
-              errors={errors}
-              onChange={handleInputChange}
-            />
-            <PaymentMethod
-              paymentMethod={paymentMethod}
-              walletProvider={walletProvider}
-              formData={formData}
-              errors={errors}
-              onPaymentMethodChange={setPaymentMethod}
-              onWalletProviderChange={setWalletProvider}
-              onInputChange={handleInputChange}
-            />
+            <VehicleCard draft={draft} />
+            <CustomerInfo profile={profile ?? null} />
+
+            {/* Location Section */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+              <h2 className="text-xl font-bold text-gray-900 mb-6">
+                Pickup & Drop-off Location
+              </h2>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Pickup Address <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={pickupAddress}
+                    onChange={(e) => {
+                      setPickupAddress(e.target.value);
+                      if (errors.pickupAddress) {
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.pickupAddress;
+                          return next;
+                        });
+                      }
+                    }}
+                    placeholder="e.g. Dhanmondi 27, Dhaka"
+                    className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-[#65AA36] focus:border-transparent outline-none transition ${
+                      errors.pickupAddress
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    }`}
+                  />
+                  {errors.pickupAddress && (
+                    <p className="text-xs text-red-500 mt-1">
+                      {errors.pickupAddress}
+                    </p>
+                  )}
+                </div>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={sameAsPickup}
+                    onChange={(e) => setSameAsPickup(e.target.checked)}
+                    className="w-4 h-4 text-[#65AA36] rounded border-gray-300 focus:ring-[#65AA36]"
+                  />
+                  <span className="text-sm text-gray-600">
+                    Drop-off at same location
+                  </span>
+                </label>
+
+                {!sameAsPickup && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Drop-off Address <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={dropoffAddress}
+                      onChange={(e) => {
+                        setDropoffAddress(e.target.value);
+                        if (errors.dropoffAddress) {
+                          setErrors((prev) => {
+                            const next = { ...prev };
+                            delete next.dropoffAddress;
+                            return next;
+                          });
+                        }
+                      }}
+                      placeholder="e.g. Banani 11, Dhaka"
+                      className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-[#65AA36] focus:border-transparent outline-none transition ${
+                        errors.dropoffAddress
+                          ? "border-red-500"
+                          : "border-gray-300"
+                      }`}
+                    />
+                    {errors.dropoffAddress && (
+                      <p className="text-xs text-red-500 mt-1">
+                        {errors.dropoffAddress}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <PaymentMethod />
           </div>
 
           {/* Right Column - Order Summary */}
@@ -219,79 +283,72 @@ export default function CheckoutPage() {
 
                 {/* Vehicle Summary */}
                 <div className="flex gap-4 mb-6 pb-6 border-b border-gray-100">
-                  <div className="w-20 h-14 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                    <img
-                      src={CAR_DATA.image}
-                      alt={CAR_DATA.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
                   <div>
                     <h3 className="font-bold text-gray-900 text-sm">
-                      {CAR_DATA.name}
+                      {draft.carName}
                     </h3>
-                    <p className="text-xs text-gray-500">{CAR_DATA.type}</p>
+                    <p className="text-xs text-gray-500 capitalize">
+                      {draft.driveType.replace("_", " ")}
+                    </p>
                   </div>
                 </div>
 
-                {/* Rental Period */}
-                <RentalPeriod
-                  rentalMode={rentalMode}
-                  daysCount={daysCount}
-                  weeksCount={weeksCount}
-                  monthlyStart={monthlyStart}
-                  monthlyEnd={monthlyEnd}
-                  totalDays={totalDays}
-                  onRentalModeChange={setRentalMode}
-                  onDaysChange={setDaysCount}
-                  onWeeksChange={setWeeksCount}
-                  onMonthlyStartChange={setMonthlyStart}
-                  onMonthlyEndChange={setMonthlyEnd}
-                  pickupTime={pickupTime}
-                  dropoffTime={dropoffTime}
-                  onPickupTimeChange={setPickupTime}
-                  onDropoffTimeChange={setDropoffTime}
-                />
-
-                {/* Price Breakdown */}
-                <div className="space-y-3 mb-6 pb-6 border-b border-gray-100">
-                  <PriceRow
-                    label={`Daily rate (${rentalLabel})`}
-                    value={subtotal}
-                  />
-                  {isSelfDrive && (
-                    <PriceRow
-                      label="Self-drive discount"
-                      value={-(selfDriveDiscount * totalDays)}
-                      className="text-[#5E9D34]"
-                    />
-                  )}
-                  <PriceRow
-                    label="Basic Insurance & Fees"
-                    value={insuranceFee}
-                  />
-                  {insurancePlan === "premium" && (
-                    <PriceRow
-                      label={`Premium Coverage (${totalDays}d)`}
-                      value={premiumInsuranceFee * totalDays}
-                    />
-                  )}
+                {/* Booking Dates */}
+                <div className="space-y-2 mb-6 pb-6 border-b border-gray-100">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Start Date</span>
+                    <span className="font-medium text-gray-900">
+                      {draft.startDate}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">End Date</span>
+                    <span className="font-medium text-gray-900">
+                      {draft.endDate}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Pickup Time</span>
+                    <span className="font-medium text-gray-900">
+                      {draft.pickupTime}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Drop-off Time</span>
+                    <span className="font-medium text-gray-900">
+                      {draft.dropoffTime}
+                    </span>
+                  </div>
                 </div>
 
-                {/* Insurance Selection */}
-                <InsuranceSelector
-                  insurancePlan={insurancePlan}
-                  totalDays={totalDays}
-                  onPlanChange={setInsurancePlan}
-                  insuranceFee={insuranceFee}
-                  premiumFee={premiumInsuranceFee}
-                />
+                {/* Price Breakdown */}
+                {draft.pricing && (
+                  <div className="space-y-3 mb-6 pb-6 border-b border-gray-100">
+                    <PriceRow
+                      label={`Rate per day (${draft.pricing.numDays} day${draft.pricing.numDays > 1 ? "s" : ""})`}
+                      value={formatBDT(draft.pricing.ratePerDay)}
+                    />
+                    <PriceRow
+                      label="Subtotal"
+                      value={formatBDT(draft.pricing.subtotal)}
+                    />
+                    {parseFloat(draft.pricing.discountAmount) > 0 && (
+                      <PriceRow
+                        label={`Discount (${draft.pricing.discountPercentage}%)`}
+                        value={`-${formatBDT(draft.pricing.discountAmount)}`}
+                        className="text-[#65AA36]"
+                      />
+                    )}
+                  </div>
+                )}
 
                 {/* Total */}
                 <div className="flex justify-between items-end mb-6">
                   <span className="font-bold text-gray-900">Total</span>
-                  <span className="text-3xl font-bold text-[#5E9D34]">
-                    ${total.toFixed(2)}
+                  <span className="text-3xl font-bold text-[#65AA36]">
+                    {draft.pricing
+                      ? formatBDT(draft.pricing.grandTotal)
+                      : "Calculating..."}
                   </span>
                 </div>
 
@@ -299,14 +356,22 @@ export default function CheckoutPage() {
                 <TermsCheckbox
                   checked={termsAccepted}
                   onToggle={() => setTermsAccepted(!termsAccepted)}
+                  error={errors.terms}
                 />
 
                 <button
                   onClick={handleSubmit}
-                  disabled={!termsAccepted}
-                  className="w-full h-12 bg-[#5E9D34] text-white rounded-xl font-bold text-sm hover:brightness-95 transition-all active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed mb-4"
+                  disabled={!termsAccepted || isSubmitting}
+                  className="w-full h-12 bg-[#65AA36] text-white rounded-xl font-bold text-sm hover:brightness-95 transition-all active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed mb-4 flex items-center justify-center gap-2"
                 >
-                  Complete Booking
+                  {isSubmitting && (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  )}
+                  {isCreating
+                    ? "Creating Booking..."
+                    : isInitiating
+                      ? "Initiating Payment..."
+                      : "Confirm & Pay"}
                 </button>
 
                 <div className="flex items-center justify-center gap-4 text-xs text-gray-400">
@@ -326,40 +391,63 @@ export default function CheckoutPage() {
   );
 }
 
-// Helper components
-function PriceRow({ label, value, className }: any) {
+// ─── Helper components ──────────────────────────────────────────
+
+function PriceRow({
+  label,
+  value,
+  className,
+}: {
+  label: string;
+  value: string;
+  className?: string;
+}) {
   return (
     <div className="flex justify-between text-sm">
       <span className="text-gray-600">{label}</span>
-      <span className={`font-medium text-gray-900 ${className || ""}`}>
-        {value < 0 ? `-$${Math.abs(value).toFixed(2)}` : `$${value.toFixed(2)}`}
+      <span className={`font-medium text-gray-900 ${className ?? ""}`}>
+        {value}
       </span>
     </div>
   );
 }
 
-function TermsCheckbox({ checked, onToggle }: any) {
+function TermsCheckbox({
+  checked,
+  onToggle,
+  error,
+}: {
+  checked: boolean;
+  onToggle: () => void;
+  error?: string;
+}) {
   return (
-    <div className="flex items-start gap-2 mb-6">
-      <div
-        className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center cursor-pointer ${
-          checked ? "bg-[#5E9D34] border-[#5E9D34]" : "border-gray-300"
-        }`}
-        onClick={onToggle}
-      >
-        {checked && <CheckCircle2 className="w-3 h-3 text-white" />}
+    <div className="mb-6">
+      <div className="flex items-start gap-2">
+        <div
+          className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center cursor-pointer ${
+            checked ? "bg-[#65AA36] border-[#65AA36]" : "border-gray-300"
+          }`}
+          onClick={onToggle}
+          role="checkbox"
+          aria-checked={checked}
+          aria-label="Accept terms and conditions"
+        >
+          {checked && <CheckCircle2 className="w-3 h-3 text-white" />}
+        </div>
+        <p className="text-xs text-gray-600 leading-tight">
+          I agree to the{" "}
+          <span className="text-[#65AA36] underline cursor-pointer">
+            Terms and Conditions
+          </span>{" "}
+          and{" "}
+          <span className="text-[#65AA36] underline cursor-pointer">
+            Privacy Policy
+          </span>
+          .
+        </p>
       </div>
-      <p className="text-xs text-gray-600 leading-tight">
-        I agree to the{" "}
-        <span className="text-[#5E9D34] underline cursor-pointer">
-          Terms and Conditions
-        </span>{" "}
-        and{" "}
-        <span className="text-[#5E9D34] underline cursor-pointer">
-          Privacy Policy
-        </span>
-        .
-      </p>
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
     </div>
   );
 }

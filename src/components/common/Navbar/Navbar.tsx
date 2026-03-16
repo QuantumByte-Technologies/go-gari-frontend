@@ -17,6 +17,16 @@ import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  selectCurrentUser,
+  selectIsAuthenticated,
+  selectRefreshToken,
+  logout as logoutAction,
+} from "@/redux/features/auth/authSlice";
+import { useLogoutMutation } from "@/redux/api/authApi";
+import baseApi from "@/redux/api/baseApi";
+import NotificationBell from "@/components/common/Notifications/NotificationBell";
 
 import logo from "@/assets/logo/logo-up.png";
 
@@ -32,17 +42,7 @@ type NavbarPage =
   | "userdashboard";
 
 interface NavbarProps {
-  isLoggedIn?: boolean;
-
-  onLogout?: () => void;
   onNavigateToDashboardTab?: (tab: string) => void;
-
-  user?: {
-    name?: string;
-    phone?: string;
-    avatarLetter?: string; // e.g. "R"
-  };
-
   currentPage?: NavbarPage;
 }
 
@@ -51,14 +51,18 @@ const BRAND_DARK = "#4f8e28"; // darker companion for gradients
 const BRAND_HOVER = "#5a982f"; // hover for solid buttons
 
 export function Navbar({
-  isLoggedIn = false,
-  onLogout,
   onNavigateToDashboardTab,
-  user,
   currentPage,
 }: NavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const dispatch = useDispatch();
+
+  // ── Read auth state from Redux ─────────────────────────────────
+  const isLoggedIn = useSelector(selectIsAuthenticated);
+  const user = useSelector(selectCurrentUser);
+  const refreshToken = useSelector(selectRefreshToken);
+  const [logoutMutation] = useLogoutMutation();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -70,8 +74,8 @@ export function Navbar({
   const computedPage: NavbarPage = useMemo(() => {
     if (currentPage) return currentPage;
     if (pathname === "/") return "home";
-    if (pathname?.startsWith("/signin")) return "signin";
-    if (pathname?.startsWith("/signup")) return "signup";
+    if (pathname?.startsWith("/auth/signin")) return "signin";
+    if (pathname?.startsWith("/auth/signup")) return "signup";
     if (pathname?.startsWith("/dashboard")) return "userdashboard";
     return "home";
   }, [currentPage, pathname]);
@@ -181,21 +185,32 @@ export function Navbar({
     router.push(`/dashboard?tab=${encodeURIComponent(tab)}`);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setProfileDropdownOpen(false);
     setMobileMenuOpen(false);
 
-    if (onLogout) onLogout();
-    else router.push("/signin");
+    try {
+      if (refreshToken) {
+        await logoutMutation({ refresh: refreshToken }).unwrap();
+      }
+    } catch {
+      // Always clear state even if API call fails
+    } finally {
+      dispatch(logoutAction());
+      dispatch(baseApi.util.resetApiState());
+      router.push("/auth/signin");
+    }
   };
 
   const avatarLetter = (
-    user?.avatarLetter ||
-    user?.name?.[0] ||
-    "R"
+    user?.first_name?.[0] ||
+    user?.email?.[0] ||
+    "U"
   ).toUpperCase();
-  const displayName = user?.name || "Rahim Ahmed";
-  const displayPhone = user?.phone || "+880 1712-345678";
+  const displayName = user
+    ? `${user.first_name} ${user.last_name}`.trim() || user.email
+    : "User";
+  const displayPhone = user?.phone || "";
 
   // Animation presets
   const navEnter = {
@@ -291,11 +306,16 @@ export function Navbar({
           {/* Right Side */}
           <div className="flex items-center gap-3">
             {isLoggedIn ? (
-              <div className="relative" ref={dropdownRef}>
+              <div className="hidden lg:flex items-center gap-2">
+                {/* Notification Bell */}
+                <NotificationBell />
+
+                {/* Profile Dropdown */}
+                <div className="relative" ref={dropdownRef}>
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setProfileDropdownOpen((s) => !s)}
-                  className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-full border border-gray-200 hover:shadow-md transition-all cursor-pointer"
+                  className="flex items-center gap-2 px-3 py-2 rounded-full border border-gray-200 hover:shadow-md transition-all cursor-pointer"
                   style={{
                     borderColor: profileDropdownOpen ? BRAND : undefined,
                   }}
@@ -379,6 +399,7 @@ export function Navbar({
                     </motion.div>
                   )}
                 </AnimatePresence>
+              </div>
               </div>
             ) : (
               <div className="hidden lg:flex items-center gap-3">
@@ -526,7 +547,7 @@ export function Navbar({
                       e.currentTarget.style.color = "";
                     }}
                     onClick={() => {
-                      router.push("/signin");
+                      router.push("/auth/signin");
                       setMobileMenuOpen(false);
                     }}
                   >
@@ -549,7 +570,7 @@ export function Navbar({
                       e.currentTarget.style.boxShadow = `0 8px 18px ${BRAND}33`;
                     }}
                     onClick={() => {
-                      router.push("/signup");
+                      router.push("/auth/signup");
                       setMobileMenuOpen(false);
                     }}
                   >

@@ -1,68 +1,120 @@
-// components/car/ReviewsSummary.tsx
-import { CarData } from "@/types/carType";
-import { Star } from "@phosphor-icons/react";
-// import type { CarData } from "@/types";
+"use client";
 
-interface Props {
-  car: CarData;
-}
+import React from "react";
+import { Star, User, ArrowRight } from "@phosphor-icons/react";
+import { useGetCarChauffeursQuery } from "@/redux/api/carsApi";
+import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 
-export function ReviewsSummary({ car }: Props) {
-  const distribution = [
-    { stars: 5, pct: "80%" },
-    { stars: 4, pct: "12%" },
-    { stars: 3, pct: "5%" },
-    { stars: 2, pct: "2%" },
-    { stars: 1, pct: "1%" },
-  ];
+const FALLBACK_PHOTO =
+  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80";
+
+export function ReviewsSummary() {
+  const params = useParams();
+  const router = useRouter();
+  const carId = Number(params.id);
+
+  const { data, isLoading } = useGetCarChauffeursQuery(
+    { id: carId },
+    { skip: !carId || Number.isNaN(carId) },
+  );
+
+  const chauffeurs = data?.results ?? [];
+
+  if (isLoading) {
+    return (
+      <section>
+        <h2 className="mb-6 text-2xl font-bold text-gray-900">
+          Available Chauffeurs
+        </h2>
+        <div className="rounded-2xl border border-gray-200 bg-white p-8">
+          <div className="flex gap-4">
+            <div className="w-16 h-16 rounded-full bg-gray-200 animate-pulse" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
+              <div className="h-3 w-48 bg-gray-200 rounded animate-pulse" />
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (chauffeurs.length === 0) {
+    return (
+      <section>
+        <h2 className="mb-6 text-2xl font-bold text-gray-900">
+          Chauffeur Service
+        </h2>
+        <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center">
+          <User
+            size={40}
+            weight="duotone"
+            className="text-gray-300 mx-auto mb-3"
+          />
+          <p className="text-gray-500">
+            No chauffeurs currently available for this vehicle.
+          </p>
+          <button
+            onClick={() => router.push("/chauffeurs")}
+            className="text-[#65AA36] text-sm font-medium hover:underline mt-2 inline-flex items-center gap-1"
+          >
+            Browse all chauffeurs <ArrowRight size={14} />
+          </button>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section>
-      <h2 className="mb-6 text-2xl font-bold text-gray-900">Reviews</h2>
+      <h2 className="mb-6 text-2xl font-bold text-gray-900">
+        Available Chauffeurs
+      </h2>
 
-      <div className="rounded-2xl border border-gray-200 bg-white p-8">
-        <div className="flex flex-col items-center gap-8 md:flex-row md:gap-12">
-          <div className="text-center md:text-left">
-            <div className="mb-2 text-5xl font-bold text-gray-900">
-              {car.rating.toFixed(1)}
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 space-y-4">
+        {chauffeurs.map((chauffeur) => (
+          <button
+            key={chauffeur.id}
+            onClick={() => router.push(`/chauffeurs/${chauffeur.id}`)}
+            className="flex items-center gap-4 w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors group"
+          >
+            <div className="relative w-14 h-14 rounded-full overflow-hidden flex-shrink-0">
+              <Image
+                src={chauffeur.photo || FALLBACK_PHOTO}
+                alt={chauffeur.user}
+                fill
+                className="object-cover"
+                sizes="56px"
+              />
             </div>
-            <div className="mb-2 flex items-center justify-center gap-1 md:justify-start">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star
-                  key={star}
-                  size={20}
-                  weight="fill"
-                  className={
-                    star <= Math.round(car.rating)
-                      ? "text-[#5E9D34]"
-                      : "text-gray-300"
-                  }
-                />
-              ))}
-            </div>
-            <p className="text-sm text-gray-500">
-              {car.reviews} verified reviews
-            </p>
-          </div>
-
-          <div className="w-full flex-1 space-y-3">
-            {distribution.map((row) => (
-              <div key={row.stars} className="flex items-center gap-4">
-                <span className="w-3 text-sm font-medium text-gray-600">
-                  {row.stars}
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-gray-900 group-hover:text-[#65AA36] transition-colors">
+                {chauffeur.user}
+              </p>
+              <div className="flex items-center gap-3 text-sm text-gray-500">
+                <span className="flex items-center gap-1">
+                  <Star size={14} weight="fill" className="text-amber-400" />
+                  {chauffeur.average_rating}
                 </span>
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100">
-                  <div
-                    className="h-full rounded-full bg-[#5E9D34]"
-                    style={{ width: row.pct }}
-                  />
-                </div>
-                <span className="w-8 text-right text-sm text-gray-400">
-                  {row.pct}
-                </span>
+                <span>{chauffeur.experience_years}yr experience</span>
+                <span>{chauffeur.total_trips} trips</span>
               </div>
-            ))}
-          </div>
+            </div>
+            <ArrowRight
+              size={18}
+              className="text-gray-400 group-hover:text-[#65AA36] transition-colors flex-shrink-0"
+            />
+          </button>
+        ))}
+
+        <div className="pt-2 border-t border-gray-100">
+          <button
+            onClick={() => router.push("/chauffeurs")}
+            className="text-[#65AA36] text-sm font-medium hover:underline inline-flex items-center gap-1"
+          >
+            View all chauffeurs <ArrowRight size={14} />
+          </button>
         </div>
       </div>
     </section>

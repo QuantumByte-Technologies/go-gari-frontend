@@ -1,19 +1,46 @@
 // components/car/HeaderSection.tsx
-import { CarData } from "@/types/carType";
-import { cn } from "@/utils/utils";
+import type { CarDetail } from "@/types/api/cars";
+import { cn } from "@/lib/utils";
 import {
   ShareNetwork,
   Heart,
   Lightning,
   UsersThree,
-  CheckCircle,
+  GearSix,
+  GasPump,
 } from "@phosphor-icons/react";
-// import type { CarData } from "@/types";
 
 interface Props {
-  car: CarData;
+  car: CarDetail;
   isLiked: boolean;
   onToggleLike: () => void;
+}
+
+/** Human-readable category label */
+function categoryLabel(cat: CarDetail["category"]): string {
+  const map: Record<CarDetail["category"], string> = {
+    economy: "Economy",
+    premium: "Premium",
+    suv: "SUV",
+  };
+  return map[cat];
+}
+
+/** Human-readable transmission label */
+function transmissionLabel(t: CarDetail["transmission"]): string {
+  return t === "auto" ? "Automatic" : "Manual";
+}
+
+/** Human-readable fuel type label */
+function fuelLabel(f: CarDetail["fuel_type"]): string {
+  const map: Record<CarDetail["fuel_type"], string> = {
+    petrol: "Petrol",
+    diesel: "Diesel",
+    electric: "Electric",
+    hybrid: "Hybrid",
+    cng: "CNG",
+  };
+  return map[f];
 }
 
 export function CarHeader({ car, isLiked, onToggleLike }: Props) {
@@ -30,10 +57,14 @@ export function CarHeader({ car, isLiked, onToggleLike }: Props) {
           {car.name}
         </h1>
 
+        <p className="mt-1 text-sm text-gray-500">
+          {car.brand} {car.model} &bull; {car.year}
+        </p>
+
         <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-gray-600">
           <span className="flex items-center gap-1.5">
             <Lightning size={18} weight="duotone" className="text-[#5E9D34]" />
-            {car.type}
+            {categoryLabel(car.category)}
           </span>
 
           <span className="flex items-center gap-1.5">
@@ -41,16 +72,15 @@ export function CarHeader({ car, isLiked, onToggleLike }: Props) {
             {car.seats} Seats
           </span>
 
-          {car.features.map((feature, i) => (
-            <span key={i} className="flex items-center gap-1.5">
-              <CheckCircle
-                size={18}
-                weight="duotone"
-                className="text-[#5E9D34]"
-              />
-              {feature}
-            </span>
-          ))}
+          <span className="flex items-center gap-1.5">
+            <GearSix size={18} weight="duotone" className="text-[#5E9D34]" />
+            {transmissionLabel(car.transmission)}
+          </span>
+
+          <span className="flex items-center gap-1.5">
+            <GasPump size={18} weight="duotone" className="text-[#5E9D34]" />
+            {fuelLabel(car.fuel_type)}
+          </span>
         </div>
       </div>
 

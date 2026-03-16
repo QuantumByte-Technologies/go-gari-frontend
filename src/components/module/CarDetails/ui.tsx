@@ -1,5 +1,5 @@
 // components/ui.tsx
-import { cn } from "@/utils/utils";
+import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
 export function PrimaryButton({

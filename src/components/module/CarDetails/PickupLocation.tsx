@@ -1,34 +1,43 @@
 // components/car/PickupLocation.tsx
+import type { CarDetail } from "@/types/api/cars";
 import { MapPinLine } from "@phosphor-icons/react";
 
-export function PickupLocation() {
+interface Props {
+  car: CarDetail;
+}
+
+export function PickupLocation({ car }: Props) {
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-6">
       <div className="mb-4 flex items-center gap-2">
         <MapPinLine size={22} weight="duotone" className="text-blue-600" />
-        <h3 className="font-bold text-gray-900">Pickup Location</h3>
+        <h3 className="font-bold text-gray-900">Pickup & Drop-off</h3>
       </div>
 
-      <div className="relative mb-4 aspect-video w-full overflow-hidden rounded-lg bg-blue-50">
-        <img
-          src="https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-          alt="Map"
-          className="h-full w-full object-cover opacity-80"
-        />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-bold text-gray-900 shadow-md">
-            <MapPinLine size={14} weight="fill" className="text-red-500" />
-            San Francisco
-          </div>
+      <div className="space-y-4">
+        {/* Pickup */}
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
+            Pickup Location
+          </p>
+          <p className="text-sm font-bold text-gray-900">
+            {car.pickup_location_address || "To be confirmed"}
+          </p>
+          {car.city && (
+            <p className="text-xs text-gray-500 mt-0.5">{car.city}</p>
+          )}
+        </div>
+
+        {/* Drop-off */}
+        <div className="border-t border-gray-100 pt-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
+            Drop-off Location
+          </p>
+          <p className="text-sm font-bold text-gray-900">
+            {car.dropoff_location_address || "Same as pickup"}
+          </p>
         </div>
       </div>
-
-      <p className="text-sm font-bold text-gray-900">
-        SFO International Airport
-      </p>
-      <p className="text-xs text-gray-500">
-        Terminal 2, Level 1, Parking Garage
-      </p>
     </div>
   );
 }

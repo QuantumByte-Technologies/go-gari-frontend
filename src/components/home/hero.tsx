@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowRight, Car, MapPin, TrendUp } from "@phosphor-icons/react";
 
-// import { BookingModule } from "@/components/home/booking/BookingModule";
 import { Button } from "@/components/ui/button";
 import { BookingModule } from "./BookingModule";
 
