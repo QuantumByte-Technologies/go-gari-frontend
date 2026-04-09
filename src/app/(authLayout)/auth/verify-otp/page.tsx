@@ -85,7 +85,7 @@ export default function VerifyOtpPage() {
     if (!isOtpComplete || !phone) return;
 
     try {
-      await verifyOtp({ phone, otp: otpValue }).unwrap();
+      await verifyOtp({ phone, code: otpValue }).unwrap();
       toast.success("Phone number verified successfully!");
       router.push("/auth/signin");
     } catch (err) {

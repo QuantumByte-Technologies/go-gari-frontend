@@ -28,7 +28,7 @@ export const registerSchema = z
 // ─── OTP Verification ───────────────────────────────────────────
 export const otpSchema = z.object({
   phone: z.string().min(10, "Phone number is required"),
-  otp: z
+  code: z
     .string()
     .length(6, "OTP must be exactly 6 digits")
     .regex(/^\d{6}$/, "OTP must contain only digits"),

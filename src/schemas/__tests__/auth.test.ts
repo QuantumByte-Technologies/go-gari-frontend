@@ -132,7 +132,7 @@ describe("otpSchema", () => {
   it("accepts valid OTP", () => {
     const result = otpSchema.safeParse({
       phone: "+8801712345678",
-      otp: "123456",
+      code: "123456",
     });
     expect(result.success).toBe(true);
   });
@@ -140,7 +140,7 @@ describe("otpSchema", () => {
   it("rejects OTP that is not exactly 6 digits", () => {
     const result = otpSchema.safeParse({
       phone: "+8801712345678",
-      otp: "12345",
+      code: "12345",
     });
     expect(result.success).toBe(false);
   });
@@ -148,7 +148,7 @@ describe("otpSchema", () => {
   it("rejects OTP with non-digit characters", () => {
     const result = otpSchema.safeParse({
       phone: "+8801712345678",
-      otp: "12345a",
+      code: "12345a",
     });
     expect(result.success).toBe(false);
   });
@@ -156,7 +156,7 @@ describe("otpSchema", () => {
   it("rejects OTP longer than 6 digits", () => {
     const result = otpSchema.safeParse({
       phone: "+8801712345678",
-      otp: "1234567",
+      code: "1234567",
     });
     expect(result.success).toBe(false);
   });

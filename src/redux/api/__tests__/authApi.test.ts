@@ -116,13 +116,13 @@ describe("authApi", () => {
 
   // ── OTP ───────────────────────────────────────────────────────
 
-  it("verifyOtp mutation sends phone + otp", async () => {
+  it("verifyOtp mutation sends phone + code", async () => {
     const store = createTestStore();
 
     const result = await store.dispatch(
       authApi.endpoints.verifyOtp.initiate({
         phone: "+8801700000000",
-        otp: "123456",
+        code: "123456",
       }),
     );
 

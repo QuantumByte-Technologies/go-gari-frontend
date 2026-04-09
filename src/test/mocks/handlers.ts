@@ -94,7 +94,7 @@ const authHandlers = [
   http.post(`${API_BASE}/accounts/verify-otp/`, async ({ request }) => {
     const body = (await request.json()) as Record<string, string>;
 
-    if (body.otp === "123456") {
+    if (body.code === "123456") {
       return HttpResponse.json({ detail: "Phone number verified." });
     }
 

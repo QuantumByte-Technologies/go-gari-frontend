@@ -27,7 +27,7 @@ export interface TokenRefreshRequest {
 
 export interface VerifyOtpRequest {
   phone: string;
-  otp: string;
+  code: string;
 }
 
 export interface ResendOtpRequest {
