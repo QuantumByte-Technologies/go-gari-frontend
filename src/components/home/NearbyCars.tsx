@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Heart,
@@ -77,6 +77,9 @@ function CarCardSkeleton({ featured = false }: { featured?: boolean }) {
   );
 }
 
+const FALLBACK_IMAGE =
+  "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+
 function FeaturedCarCard({
   car,
   isFavorite,
@@ -86,6 +89,7 @@ function FeaturedCarCard({
   isFavorite: boolean;
   onToggleFavorite: () => void;
 }) {
+  const router = useRouter();
   const categoryLabel = CATEGORY_LABELS[car.category] ?? car.category.toUpperCase();
   const categoryColor = CATEGORY_COLORS[car.category] ?? "bg-[#5E9D34]";
 
@@ -94,20 +98,16 @@ function FeaturedCarCard({
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="lg:row-span-2 bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col h-full"
+      onClick={() => router.push(`/search-cars/${car.id}`)}
+      className="lg:row-span-2 bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col h-full cursor-pointer"
     >
       <div className="relative h-72 lg:h-full min-h-[300px] bg-gray-100">
-        <Image
-          src={car.primary_image || "/placeholder-car.jpg"}
+        <img
+          src={car.primary_image || FALLBACK_IMAGE}
           alt={car.name}
-          fill
-          sizes="(max-width: 1024px) 100vw, 50vw"
-          className="object-cover"
-          priority
+          className="absolute inset-0 w-full h-full object-cover"
           onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.src =
-              "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+            (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
           }}
         />
 
@@ -119,7 +119,7 @@ function FeaturedCarCard({
 
         <button
           type="button"
-          onClick={onToggleFavorite}
+          onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
           className="absolute top-4 right-4 w-10 h-10 bg-white rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-md"
           aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
         >
@@ -166,8 +166,8 @@ function FeaturedCarCard({
             <p className="text-xs text-gray-500">{car.city}</p>
           </div>
 
-          <Button size="lg" asChild>
-            <Link href={`/search-cars/${car.id}`}>Book Now</Link>
+          <Button size="lg" onClick={(e) => { e.stopPropagation(); router.push(`/search-cars/${car.id}`); }}>
+            Book Now
           </Button>
         </div>
       </div>
@@ -182,6 +182,7 @@ function SmallCarCard({
   car: CarListItem;
   index: number;
 }) {
+  const router = useRouter();
   const categoryLabel = CATEGORY_LABELS[car.category] ?? car.category.toUpperCase();
   const categoryColor = CATEGORY_COLORS[car.category] ?? "bg-[#5E9D34]";
 
@@ -191,19 +192,16 @@ function SmallCarCard({
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.1 }}
-      className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col sm:flex-row"
+      onClick={() => router.push(`/search-cars/${car.id}`)}
+      className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col sm:flex-row cursor-pointer"
     >
       <div className="relative h-48 sm:w-48 sm:h-auto bg-gray-100 shrink-0">
-        <Image
-          src={car.primary_image || "/placeholder-car.jpg"}
+        <img
+          src={car.primary_image || FALLBACK_IMAGE}
           alt={car.name}
-          fill
-          sizes="(max-width: 640px) 100vw, 192px"
-          className="object-cover"
+          className="absolute inset-0 w-full h-full object-cover"
           onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.src =
-              "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+            (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
           }}
         />
         <div
@@ -251,8 +249,8 @@ function SmallCarCard({
             <span className="text-xs text-gray-600">/day</span>
           </div>
 
-          <Button size="sm" asChild>
-            <Link href={`/search-cars/${car.id}`}>Book</Link>
+          <Button size="sm" onClick={(e) => { e.stopPropagation(); router.push(`/search-cars/${car.id}`); }}>
+            Book
           </Button>
         </div>
       </div>

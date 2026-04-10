@@ -23,7 +23,9 @@ import { toast } from "sonner";
 import DocumentsSection from "./DocumentsSection";
 
 export default function ProfileSection() {
-  const { data: profile, isLoading, error } = useGetProfileQuery();
+  const { data: profile, isLoading, error } = useGetProfileQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  });
   const [updateProfile, { isLoading: isUpdating }] =
     useUpdateProfileMutation();
 

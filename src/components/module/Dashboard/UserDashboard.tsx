@@ -28,7 +28,9 @@ export default function UserDashboard({ initialTab }: Props) {
   const unreadCount = unreadData?.count ?? 0;
 
   // Fetch verification status
-  const { data: verificationData } = useGetVerificationStatusQuery();
+  const { data: verificationData } = useGetVerificationStatusQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  });
 
   useEffect(() => {
     const tab = initialTab as TabType | undefined;
