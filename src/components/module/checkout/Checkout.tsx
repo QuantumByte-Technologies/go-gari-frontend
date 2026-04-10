@@ -247,8 +247,8 @@ export default function CheckoutPage() {
                   <p className="text-sm font-medium text-amber-800">Account not verified</p>
                   <p className="text-xs text-amber-600 mt-0.5">
                     You need to upload and get your documents verified before you can book.{" "}
-                    <button onClick={() => router.push("/dashboard?tab=profile")} className="underline font-medium">
-                      Upload documents
+                    <button onClick={() => router.push("/dashboard?tab=documents")} className="underline font-medium">
+                      Upload verification documents
                     </button>
                   </p>
                 </div>
@@ -268,7 +268,7 @@ export default function CheckoutPage() {
                       ? "Your driving license is being reviewed. You'll be able to book once it's approved."
                       : "Please upload your driving license to book a self-drive car. "}
                     {!hasPendingLicense && (
-                      <button onClick={() => router.push("/dashboard?tab=profile")} className="underline font-medium">
+                      <button onClick={() => router.push("/dashboard?tab=documents")} className="underline font-medium">
                         Upload now
                       </button>
                     )}

@@ -10,6 +10,7 @@ import { useGetUnreadCountQuery } from "@/redux/api/notificationsApi";
 import { useGetVerificationStatusQuery } from "@/redux/api/authApi";
 import TripsSection from "./TripsSection";
 import ProfileSection from "./ProfileSection";
+import DocumentsSection from "./DocumentsSection";
 import CarsSection from "./CarsSection";
 import SupportSection from "./SupportSection";
 import InboxSection from "./InboxSection";
@@ -45,6 +46,8 @@ export default function UserDashboard({ initialTab }: Props) {
         return <TripsSection />;
       case "profile":
         return <ProfileSection />;
+      case "documents":
+        return <DocumentsSection />;
       case "cars":
         return <CarsSection />;
       case "support":
@@ -120,10 +123,10 @@ export default function UserDashboard({ initialTab }: Props) {
               </p>
               {verificationData.verification_status !== "pending" && (
                 <button
-                  onClick={() => setActiveTab("profile")}
+                  onClick={() => setActiveTab("documents")}
                   className="mt-2 text-xs font-medium underline hover:no-underline"
                 >
-                  Go to Documents
+                  Upload Verification Documents
                 </button>
               )}
             </div>

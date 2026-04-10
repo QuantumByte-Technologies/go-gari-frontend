@@ -1,5 +1,5 @@
 // components/dashboard/types.ts
-export type TabType = "trips" | "profile" | "cars" | "support" | "inbox";
+export type TabType = "trips" | "profile" | "documents" | "cars" | "support" | "inbox";
 export type TripTabType = "upcoming" | "completed" | "cancelled";
 
 export type UserProfile = {

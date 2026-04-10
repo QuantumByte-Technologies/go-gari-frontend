@@ -8,12 +8,16 @@ import {
   UsersThree,
   Gauge,
   GasPump,
+  ShieldCheck,
 } from "@phosphor-icons/react";
 import type { CarListItem } from "@/types/api/cars";
 import { Button } from "@/components/ui/button";
 import { cardIn, EASE_OUT } from "@/lib/motion";
 import { formatBDT } from "@/utils/checkout";
 import { useRouter } from "next/navigation";
+import { useGetVerificationStatusQuery } from "@/redux/api/authApi";
+import { selectIsAuthenticated } from "@/redux/features/auth/authSlice";
+import { useSelector } from "react-redux";
 
 type Props = {
   car: CarListItem;
@@ -77,6 +81,11 @@ export default function CarCard({
   const reduce = useReducedMotion();
   const [imgError, setImgError] = useState(false);
   const router = useRouter();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const { data: verificationData } = useGetVerificationStatusQuery(undefined, {
+    skip: !isAuthenticated,
+  });
+  const isVerified = !isAuthenticated || (verificationData?.is_verified ?? true);
 
   const imageUrl =
     car.primary_image && !imgError ? car.primary_image : FALLBACK_IMAGE;
@@ -184,6 +193,16 @@ export default function CarCard({
             Book Now
           </Button>
         </div>
+
+        {isAuthenticated && !isVerified && (
+          <button
+            onClick={(e) => { e.stopPropagation(); router.push("/dashboard?tab=documents"); }}
+            className="mt-3 flex items-center gap-1.5 text-xs text-amber-600 hover:text-amber-700 transition-colors"
+          >
+            <ShieldCheck size={14} weight="fill" />
+            <span>Verify your account to book</span>
+          </button>
+        )}
       </div>
     </motion.article>
   );

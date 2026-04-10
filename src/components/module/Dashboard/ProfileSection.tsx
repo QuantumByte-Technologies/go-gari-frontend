@@ -20,7 +20,6 @@ import {
   useUpdateProfileMutation,
 } from "@/redux/api/authApi";
 import { toast } from "sonner";
-import DocumentsSection from "./DocumentsSection";
 
 export default function ProfileSection() {
   const { data: profile, isLoading, error } = useGetProfileQuery(undefined, {
@@ -294,7 +293,6 @@ export default function ProfileSection() {
         </div>
       </div>
 
-      <DocumentsSection />
     </div>
   );
 }

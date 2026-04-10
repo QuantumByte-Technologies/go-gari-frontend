@@ -4,9 +4,8 @@ import type { TabType } from "./types";
 import {
   Car,
   User,
-  Headset,
+  IdentificationCard,
   ChatCircleDots,
-  MagnifyingGlass,
 } from "@phosphor-icons/react";
 
 export const DASHBOARD_TABS: Array<{
@@ -16,14 +15,14 @@ export const DASHBOARD_TABS: Array<{
 }> = [
   { id: "trips", label: "My Trips", icon: Car },
   { id: "profile", label: "Profile", icon: User },
-  { id: "cars", label: "Browse Cars", icon: MagnifyingGlass },
-  { id: "support", label: "Support", icon: Headset },
+  { id: "documents", label: "Verification Documents", icon: IdentificationCard },
   { id: "inbox", label: "Inbox", icon: ChatCircleDots },
 ];
 
 export const TAB_LABELS: Record<TabType, string> = {
   trips: "My Trips",
   profile: "Profile Settings",
+  documents: "Verification Documents",
   cars: "Browse Cars",
   support: "Customer Support",
   inbox: "Inbox",

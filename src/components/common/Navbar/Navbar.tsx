@@ -5,10 +5,9 @@ import {
   Car,
   CaretDown,
   ChatCircleDots,
-  Headset,
-  Heart,
+  House,
+  IdentificationCard,
   List,
-  MagnifyingGlass,
   SignOut,
   UserCircle,
   X,
@@ -165,11 +164,10 @@ export function Navbar({
   ];
 
   const profileMenuItems = [
-    { label: "Favorites", icon: Heart, tab: "favorites" },
+    { label: "Dashboard", icon: House, tab: "trips" },
     { label: "My Trips", icon: Car, tab: "trips" },
     { label: "Profile", icon: UserCircle, tab: "profile" },
-    { label: "Browse Cars", icon: MagnifyingGlass, tab: "cars" },
-    { label: "Support", icon: Headset, tab: "support" },
+    { label: "Verification Documents", icon: IdentificationCard, tab: "documents" },
     { label: "Inbox", icon: ChatCircleDots, tab: "inbox" },
   ];
 
