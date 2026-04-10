@@ -159,13 +159,19 @@ export function Navbar({
     },
     {
       label: "About Us",
-      action: () => scrollToSection("platform-clarity"),
-      isActive: false,
+      action: () => {
+        setMobileMenuOpen(false);
+        router.push("/about");
+      },
+      isActive: pathname === "/about",
     },
     {
       label: "How It Works",
-      action: () => scrollToSection("how-it-works"),
-      isActive: false,
+      action: () => {
+        setMobileMenuOpen(false);
+        router.push("/how-it-works");
+      },
+      isActive: pathname === "/how-it-works",
     },
   ];
 
