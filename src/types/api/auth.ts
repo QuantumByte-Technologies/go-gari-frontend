@@ -65,6 +65,7 @@ export interface UserProfile {
   is_verified: boolean;
   verification_status: VerificationStatus;
   date_joined: string;
+  avatar: string | null;
 }
 
 export interface LoginResponse {

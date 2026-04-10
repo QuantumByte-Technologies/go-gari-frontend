@@ -18,6 +18,7 @@ import {
 import {
   useGetProfileQuery,
   useUpdateProfileMutation,
+  useUploadAvatarMutation,
 } from "@/redux/api/authApi";
 import { toast } from "sonner";
 
@@ -27,6 +28,22 @@ export default function ProfileSection() {
   });
   const [updateProfile, { isLoading: isUpdating }] =
     useUpdateProfileMutation();
+  const [uploadAvatar, { isLoading: isUploadingAvatar }] =
+    useUploadAvatarMutation();
+  const avatarInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append("avatar", file);
+    try {
+      await uploadAvatar(formData).unwrap();
+      toast.success("Avatar updated");
+    } catch {
+      toast.error("Failed to update avatar");
+    }
+  };
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -164,14 +181,35 @@ export default function ProfileSection() {
       <div className="bg-white rounded-2xl border border-gray-200 p-6">
         <div className="flex items-center gap-6">
           <div className="relative">
-            <div className="w-24 h-24 bg-linear-to-br from-[#5E9D34] to-[#4a7d29] rounded-full flex items-center justify-center text-white text-3xl font-bold">
-              {profile.first_name.charAt(0)}
-            </div>
-            {isEditing && (
-              <button className="absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50">
-                <Camera size={16} weight="bold" className="text-gray-600" />
-              </button>
+            {profile.avatar ? (
+              <img
+                src={profile.avatar}
+                alt={profile.first_name}
+                className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+              />
+            ) : (
+              <div className="w-24 h-24 bg-linear-to-br from-[#5E9D34] to-[#4a7d29] rounded-full flex items-center justify-center text-white text-3xl font-bold">
+                {profile.first_name.charAt(0)}
+              </div>
             )}
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleAvatarChange}
+            />
+            <button
+              onClick={() => avatarInputRef.current?.click()}
+              disabled={isUploadingAvatar}
+              className="absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 disabled:opacity-50"
+            >
+              {isUploadingAvatar ? (
+                <Spinner size={16} className="animate-spin text-gray-600" />
+              ) : (
+                <Camera size={16} weight="bold" className="text-gray-600" />
+              )}
+            </button>
           </div>
           <div>
             <h3 className="text-xl font-bold text-gray-900">{fullName}</h3>

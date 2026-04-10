@@ -321,7 +321,10 @@ export default function DocumentsSection() {
     "nid_back",
     "passport",
   ];
-  const existingTypes = new Set(documents.map((d) => d.document_type));
+  // Only non-rejected docs block re-upload — rejected ones can be replaced
+  const existingTypes = new Set(
+    documents.filter((d) => d.status !== "rejected").map((d) => d.document_type),
+  );
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-6">

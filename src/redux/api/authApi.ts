@@ -129,6 +129,16 @@ const authApi = baseApi.injectEndpoints({
       invalidatesTags: ["Profile"],
     }),
 
+    // ── Upload Avatar ───────────────────────────────────────────────
+    uploadAvatar: builder.mutation<UserProfile, FormData>({
+      query: (formData) => ({
+        url: "/accounts/profile/",
+        method: "PATCH",
+        body: formData,
+      }),
+      invalidatesTags: ["Profile"],
+    }),
+
     // ── Verification Status ────────────────────────────────────────
     getVerificationStatus: builder.query<VerificationStatusResponse, void>({
       query: () => "/accounts/verification-status/",
@@ -149,6 +159,7 @@ export const {
   useRefreshTokenMutation,
   useGetProfileQuery,
   useUpdateProfileMutation,
+  useUploadAvatarMutation,
   useGetVerificationStatusQuery,
 } = authApi;
 

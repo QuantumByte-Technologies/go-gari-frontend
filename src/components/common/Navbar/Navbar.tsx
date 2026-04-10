@@ -23,7 +23,7 @@ import {
   selectRefreshToken,
   logout as logoutAction,
 } from "@/redux/features/auth/authSlice";
-import { useLogoutMutation } from "@/redux/api/authApi";
+import { useLogoutMutation, useGetProfileQuery } from "@/redux/api/authApi";
 import baseApi from "@/redux/api/baseApi";
 import NotificationBell from "@/components/common/Notifications/NotificationBell";
 
@@ -59,9 +59,15 @@ export function Navbar({
 
   // ── Read auth state from Redux ─────────────────────────────────
   const isLoggedIn = useSelector(selectIsAuthenticated);
-  const user = useSelector(selectCurrentUser);
+  const reduxUser = useSelector(selectCurrentUser);
   const refreshToken = useSelector(selectRefreshToken);
   const [logoutMutation] = useLogoutMutation();
+
+  // Fetch fresh profile (has avatar) — falls back to Redux user
+  const { data: profileData } = useGetProfileQuery(undefined, {
+    skip: !isLoggedIn,
+  });
+  const user = profileData ?? reduxUser;
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -318,14 +324,22 @@ export function Navbar({
                     borderColor: profileDropdownOpen ? BRAND : undefined,
                   }}
                 >
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                    style={{
-                      background: `linear-gradient(135deg, ${BRAND}, ${BRAND_DARK})`,
-                    }}
-                  >
-                    {avatarLetter}
-                  </div>
+                  {user?.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={avatarLetter}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                      style={{
+                        background: `linear-gradient(135deg, ${BRAND}, ${BRAND_DARK})`,
+                      }}
+                    >
+                      {avatarLetter}
+                    </div>
+                  )}
                   <motion.span
                     animate={{ rotate: profileDropdownOpen ? 180 : 0 }}
                     transition={{ duration: 0.16 }}
@@ -345,14 +359,22 @@ export function Navbar({
                     >
                       <div className="p-3 border-b border-gray-100">
                         <div className="flex items-center gap-3">
-                          <div
-                            className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
-                            style={{
-                              background: `linear-gradient(135deg, ${BRAND}, ${BRAND_DARK})`,
-                            }}
-                          >
-                            {avatarLetter}
-                          </div>
+                          {user?.avatar ? (
+                            <img
+                              src={user.avatar}
+                              alt={avatarLetter}
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div
+                              className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
+                              style={{
+                                background: `linear-gradient(135deg, ${BRAND}, ${BRAND_DARK})`,
+                              }}
+                            >
+                              {avatarLetter}
+                            </div>
+                          )}
                           <div>
                             <p className="font-semibold text-gray-900 text-sm">
                               {displayName}
