@@ -26,6 +26,7 @@ const mockUser: UserProfile = {
   is_verified: true,
   verification_status: "approved",
   date_joined: "2026-01-01T00:00:00Z",
+  avatar: null,
 };
 
 describe("authSlice", () => {
