@@ -39,6 +39,7 @@ export function PricingCard({ car }: Props) {
     car.drive_option === "self_drive_only",
   );
 
+  const withChauffeur = !isSelfDrive;
   const driveType = isSelfDrive ? "self_drive" as const : "with_chauffeur" as const;
 
   // Only allow self-drive toggle if the car supports both
@@ -54,7 +55,7 @@ export function PricingCard({ car }: Props) {
       car_id: car.id,
       start_date: startDate,
       end_date: endDate,
-      drive_type: driveType,
+      with_chauffeur: withChauffeur,
     },
     {
       skip: !startDate || !endDate || startDate >= endDate,

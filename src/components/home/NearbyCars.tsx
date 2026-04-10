@@ -19,7 +19,7 @@ import { formatBDT } from "@/utils/checkout";
 // Dhaka default coordinates
 const DEFAULT_LAT = 23.8103;
 const DEFAULT_LNG = 90.4125;
-const NEARBY_RADIUS = 50; // km
+const NEARBY_RADIUS = 20; // km
 
 const TRANSMISSION_LABELS: Record<string, string> = {
   auto: "Automatic",
@@ -29,6 +29,7 @@ const TRANSMISSION_LABELS: Record<string, string> = {
 const FUEL_LABELS: Record<string, string> = {
   petrol: "Petrol",
   diesel: "Diesel",
+  octane: "Octane",
   hybrid: "Hybrid",
   electric: "Electric",
   cng: "CNG",

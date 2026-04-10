@@ -12,12 +12,12 @@ const pricingApi = baseApi.injectEndpoints({
       PricingCalculateResponse,
       PricingCalculateParams
     >({
-      query: ({ car_id, start_date, end_date, drive_type }) => {
+      query: ({ car_id, start_date, end_date, with_chauffeur }) => {
         const params = new URLSearchParams({
           car_id: String(car_id),
           start_date,
           end_date,
-          drive_type,
+          with_chauffeur: String(with_chauffeur),
         });
         return `/pricing/calculate/?${params.toString()}`;
       },

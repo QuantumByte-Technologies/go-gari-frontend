@@ -11,7 +11,7 @@ describe("pricingApi", () => {
         car_id: 1,
         start_date: "2026-05-01",
         end_date: "2026-05-04",
-        drive_type: "self_drive",
+        with_chauffeur: false,
       }),
     );
 
@@ -32,7 +32,7 @@ describe("pricingApi", () => {
         car_id: 1,
         start_date: "2026-05-01",
         end_date: "2026-05-04",
-        drive_type: "with_chauffeur",
+        with_chauffeur: true,
       }),
     );
 
@@ -50,7 +50,7 @@ describe("pricingApi", () => {
         car_id: 1,
         start_date: "2026-05-01",
         end_date: "2026-05-08",
-        drive_type: "self_drive",
+        with_chauffeur: false,
       }),
     );
 

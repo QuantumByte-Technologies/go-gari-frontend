@@ -1,4 +1,4 @@
-import { AirplaneTilt, Car, UserCircle } from "@phosphor-icons/react";
+import { Car, UserCircle } from "@phosphor-icons/react";
 import { CarTypeOption, DriveType, DriveTypeOption } from "./types";
 
 export const CAR_TYPES: CarTypeOption[] = [
@@ -30,7 +30,6 @@ export const CAR_TYPES: CarTypeOption[] = [
 export const DRIVE_TYPES: DriveTypeOption[] = [
   { id: "self", label: "Self Drive", icon: Car },
   { id: "driver", label: "With Driver", icon: UserCircle },
-  { id: "airport", label: "Airport Shuttle", icon: AirplaneTilt },
 ];
 
 export const DEFAULTS: { driveType: DriveType; carTypeId: string } = {

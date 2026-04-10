@@ -23,12 +23,6 @@ export default function ResultsHeader({
         <p className="text-sm text-gray-600 mt-1">{subtitle}</p>
       </div>
 
-      <div className="hidden sm:flex items-center gap-2">
-        <span className="text-sm text-gray-600">Sort by:</span>
-        <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl hover:border-gray-300 transition-colors text-sm font-medium">
-          Recommended <span className="text-gray-400">▾</span>
-        </button>
-      </div>
     </motion.div>
   );
 }

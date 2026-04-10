@@ -5,7 +5,7 @@ import paymentsApi from "../paymentsApi";
 describe("paymentsApi", () => {
   // ── initiatePayment ───────────────────────────────────────────
 
-  it("initiatePayment returns payment_url for valid booking", async () => {
+  it("initiatePayment returns payment and payment_url for valid booking", async () => {
     const store = createTestStore(createAuthenticatedState());
 
     const result = await store.dispatch(
@@ -14,7 +14,10 @@ describe("paymentsApi", () => {
 
     expect(result.data).toBeDefined();
     expect(result.data?.payment_url).toContain("sandbox.sslcommerz.com");
-    expect(result.data?.tran_id).toContain("TXN-2-");
+    expect(result.data?.payment).toBeDefined();
+    expect(result.data?.payment.booking_id).toBe(2);
+    expect(result.data?.payment.transaction_id).toContain("TXN-2-");
+    expect(result.data?.payment.status).toBe("pending");
   });
 
   it("initiatePayment returns 400 for already-paid booking", async () => {

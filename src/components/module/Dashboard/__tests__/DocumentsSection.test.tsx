@@ -92,7 +92,7 @@ describe("DocumentsSection", () => {
     });
   });
 
-  it("shows delete button for pending and rejected documents, not for approved", async () => {
+  it("shows delete button only for rejected documents, not for pending or approved", async () => {
     renderWithProviders(<DocumentsSection />, {
       preloadedState: createAuthenticatedState(),
     });
@@ -102,11 +102,13 @@ describe("DocumentsSection", () => {
       expect(screen.getByText("Driving License")).toBeInTheDocument();
     });
 
-    // Pending doc (NID Front) should have "Delete" button
-    expect(screen.getByText("Delete")).toBeInTheDocument();
-
     // Rejected doc (Passport) should have "Delete & Re-upload" button
     expect(screen.getByText("Delete & Re-upload")).toBeInTheDocument();
+
+    // Pending doc (NID Front) should NOT have a delete button
+    expect(
+      screen.queryByLabelText("Delete NID (Front)")
+    ).not.toBeInTheDocument();
 
     // Approved doc (Driving License) should NOT have a delete button
     expect(
@@ -133,7 +135,7 @@ describe("DocumentsSection", () => {
     expect(screen.getByText("Click to upload")).toBeInTheDocument();
   });
 
-  it("deletes a document and shows success toast", async () => {
+  it("deletes a rejected document and shows success toast", async () => {
     const user = userEvent.setup();
 
     renderWithProviders(<DocumentsSection />, {
@@ -142,11 +144,11 @@ describe("DocumentsSection", () => {
 
     // Wait for documents to load
     await waitFor(() => {
-      expect(screen.getByText("Driving License")).toBeInTheDocument();
+      expect(screen.getByText("Passport")).toBeInTheDocument();
     });
 
-    // Click delete on the pending NID Front document
-    const deleteButton = screen.getByLabelText("Delete NID (Front)");
+    // Click delete on the rejected Passport document
+    const deleteButton = screen.getByLabelText("Delete Passport");
     await user.click(deleteButton);
 
     await waitFor(() => {

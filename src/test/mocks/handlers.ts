@@ -51,10 +51,9 @@ const authHandlers = [
 
     return HttpResponse.json(
       {
-        email: body.email,
+        message: "Registration successful. Please verify your phone number.",
+        user_id: 1,
         phone: body.phone,
-        first_name: body.first_name,
-        last_name: body.last_name,
       },
       { status: 201 },
     );
@@ -322,7 +321,12 @@ const carsHandlers = [
     }
 
     return HttpResponse.json({
-      booked_dates: ["2026-04-01", "2026-04-02", "2026-04-03"],
+      car_id: id,
+      unavailable_dates: [
+        { date: "2026-04-01", reason: "booked" },
+        { date: "2026-04-02", reason: "booked" },
+        { date: "2026-04-03", reason: "booked" },
+      ],
     });
   }),
 
@@ -355,7 +359,7 @@ const pricingHandlers = [
     const carId = Number(url.searchParams.get("car_id"));
     const startDate = url.searchParams.get("start_date") ?? "";
     const endDate = url.searchParams.get("end_date") ?? "";
-    const driveType = url.searchParams.get("drive_type") ?? "self_drive";
+    const withChauffeur = url.searchParams.get("with_chauffeur") === "true";
 
     // Calculate days
     const start = new Date(startDate);
@@ -365,7 +369,7 @@ const pricingHandlers = [
       Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)),
     );
 
-    const ratePerDay = driveType === "with_chauffeur" ? "5000.00" : "3500.00";
+    const ratePerDay = withChauffeur ? "5000.00" : "3500.00";
     const chauffeurRate = "1500.00";
     const subtotal = (parseFloat(ratePerDay) * numDays).toFixed(2);
     const discountPercentage = numDays >= 7 ? "10.00" : "0.00";
@@ -574,8 +578,18 @@ const paymentsHandlers = [
     }
 
     return HttpResponse.json({
+      payment: {
+        id: 1,
+        booking_id: bookingId,
+        amount: "14000.00",
+        currency: "BDT",
+        transaction_id: `TXN-${bookingId}-${Date.now()}`,
+        status: "pending",
+        payment_method: "sslcommerz",
+        paid_at: null,
+        created_at: new Date().toISOString(),
+      },
       payment_url: "https://sandbox.sslcommerz.com/gwprocess/v4/gw.php?Q=mock",
-      tran_id: `TXN-${bookingId}-${Date.now()}`,
     });
   }),
 ];
@@ -926,6 +940,13 @@ const documentsHandlers = [
         { status: 400 },
       );
     }
+    // id 2 is pending — backend only allows deleting rejected documents
+    if (id === 2) {
+      return HttpResponse.json(
+        { detail: "Only rejected documents can be deleted." },
+        { status: 400 },
+      );
+    }
     return HttpResponse.json(null, { status: 204 });
   }),
 ];
@@ -942,14 +963,24 @@ const dashboardHandlers = [
       );
     }
     return HttpResponse.json({
+      summary: {
+        total_bookings: 5,
+        completed_trips: 3,
+        unread_notifications: 1,
+      },
       upcoming_bookings: [mockBookingListItem],
       active_trips: [mockActiveTripListItem],
       pending_payments: [
         {
           id: 5,
-          booking_id: "BK-20260410-007",
-          grand_total: "18500.00",
-          expires_at: "2026-03-15T10:00:00Z",
+          booking_id: 7,
+          amount: "18500.00",
+          currency: "BDT",
+          transaction_id: "TXN-7-1712345678",
+          status: "pending",
+          payment_method: "sslcommerz",
+          paid_at: null,
+          created_at: "2026-03-15T10:00:00Z",
         },
       ],
       recent_notifications: [mockNotification1],

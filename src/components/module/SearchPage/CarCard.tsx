@@ -44,6 +44,7 @@ function fuelLabel(f: CarListItem["fuel_type"]): string {
   const map: Record<CarListItem["fuel_type"], string> = {
     petrol: "Petrol",
     diesel: "Diesel",
+    octane: "Octane",
     electric: "Electric",
     hybrid: "Hybrid",
     cng: "CNG",
@@ -87,7 +88,8 @@ export default function CarCard({
       variants={cardIn}
       whileHover={reduce ? undefined : { y: -4 }}
       transition={{ type: "spring", stiffness: 240, damping: 18 }}
-      className="group bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow duration-300"
+      onClick={() => router.push(`/search-cars/${car.id}`)}
+      className="group bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer"
     >
       {/* Image */}
       <div className="relative h-56 bg-gray-200 overflow-hidden">
@@ -118,7 +120,7 @@ export default function CarCard({
 
         {/* Favorite */}
         <button
-          onClick={onToggleFavorite}
+          onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
           aria-label="Toggle favorite"
           className="absolute top-4 right-4 z-10 w-10 h-10 bg-white rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-md"
         >
@@ -176,7 +178,7 @@ export default function CarCard({
           </div>
 
           <Button
-            onClick={() => router.push(`/search-cars/${car.id}`)}
+            onClick={(e) => { e.stopPropagation(); router.push(`/search-cars/${car.id}`); }}
             className="bg-[#65aa36] hover:bg-[#65aa36]/80 cursor-pointer"
           >
             Book Now

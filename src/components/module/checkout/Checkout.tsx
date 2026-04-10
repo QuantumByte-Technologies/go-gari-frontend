@@ -10,7 +10,8 @@ import { PaymentMethod } from "./PaymentMethod";
 import { Breadcrumb } from "./Breadcrumb";
 import { useCreateBookingMutation } from "@/redux/api/bookingsApi";
 import { useInitiatePaymentMutation } from "@/redux/api/paymentsApi";
-import { useGetProfileQuery } from "@/redux/api/authApi";
+import { useGetProfileQuery, useGetVerificationStatusQuery } from "@/redux/api/authApi";
+import { useGetDocumentsQuery } from "@/redux/api/documentsApi";
 import { selectIsAuthenticated } from "@/redux/features/auth/authSlice";
 import { useSelector } from "react-redux";
 import {
@@ -42,8 +43,14 @@ export default function CheckoutPage() {
     }
   }, [draftLoaded, isAuthenticated, router]);
 
-  // ─── Profile query ────────────────────────────────────────────
+  // ─── Profile & verification queries ────────────────────────────
   const { data: profile } = useGetProfileQuery(undefined, {
+    skip: !isAuthenticated,
+  });
+  const { data: verificationData } = useGetVerificationStatusQuery(undefined, {
+    skip: !isAuthenticated,
+  });
+  const { data: documentsData } = useGetDocumentsQuery(undefined, {
     skip: !isAuthenticated,
   });
 
@@ -83,9 +90,34 @@ export default function CheckoutPage() {
     return Object.keys(newErrors).length === 0;
   }, [pickupAddress, dropoffAddress, sameAsPickup, termsAccepted]);
 
+  // ─── Derived verification state ────────────────────────────────
+  const isVerified = verificationData?.is_verified ?? false;
+  const documents = documentsData?.results ?? [];
+  const hasApprovedLicense = documents.some(
+    (d) => d.document_type === "driving_license" && d.status === "approved",
+  );
+  const hasPendingLicense = documents.some(
+    (d) => d.document_type === "driving_license" && d.status === "pending",
+  );
+  const isSelfDrive = draft?.driveType === "self_drive";
+
   // ─── Submit handler ───────────────────────────────────────────
   const handleSubmit = async () => {
     if (!draft || !validate()) return;
+
+    // Frontend pre-checks
+    if (!isVerified) {
+      toast.error("Your account must be verified before booking. Please upload your documents.");
+      return;
+    }
+    if (isSelfDrive && !hasApprovedLicense) {
+      if (hasPendingLicense) {
+        toast.error("Your driving license is pending verification. Please wait for approval before booking self-drive.");
+      } else {
+        toast.error("Self-drive requires an approved driving license. Please upload your license first.");
+      }
+      return;
+    }
 
     const bookingPayload: BookingCreateRequest = {
       car_id: draft.carId,
@@ -125,10 +157,33 @@ export default function CheckoutPage() {
         router.push("/dashboard");
       }
     } catch (err: unknown) {
-      const apiErr = err as { data?: { detail?: string } };
-      toast.error(
-        apiErr?.data?.detail ?? "Failed to create booking. Please try again.",
-      );
+      const apiErr = err as { data?: Record<string, unknown> };
+      const data = apiErr?.data;
+      if (data) {
+        // Handle non_field_errors (array of strings)
+        const nonFieldErrors = data.non_field_errors;
+        if (Array.isArray(nonFieldErrors) && nonFieldErrors.length > 0) {
+          toast.error(nonFieldErrors[0] as string);
+          return;
+        }
+        // Handle detail string
+        if (typeof data.detail === "string") {
+          toast.error(data.detail);
+          return;
+        }
+        // Handle field-level errors (show first one found)
+        for (const value of Object.values(data)) {
+          if (Array.isArray(value) && value.length > 0) {
+            toast.error(value[0] as string);
+            return;
+          }
+          if (typeof value === "string") {
+            toast.error(value);
+            return;
+          }
+        }
+      }
+      toast.error("Failed to create booking. Please try again.");
     }
   };
 
@@ -182,6 +237,44 @@ export default function CheckoutPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
           {/* Left Column - Forms */}
           <div className="lg:col-span-7 space-y-8">
+            {/* Verification warnings */}
+            {!isVerified && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-amber-800">Account not verified</p>
+                  <p className="text-xs text-amber-600 mt-0.5">
+                    You need to upload and get your documents verified before you can book.{" "}
+                    <button onClick={() => router.push("/dashboard?tab=profile")} className="underline font-medium">
+                      Upload documents
+                    </button>
+                  </p>
+                </div>
+              </div>
+            )}
+            {isVerified && isSelfDrive && !hasApprovedLicense && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-amber-800">
+                    {hasPendingLicense
+                      ? "Driving license pending verification"
+                      : "Driving license required for self-drive"}
+                  </p>
+                  <p className="text-xs text-amber-600 mt-0.5">
+                    {hasPendingLicense
+                      ? "Your driving license is being reviewed. You'll be able to book once it's approved."
+                      : "Please upload your driving license to book a self-drive car. "}
+                    {!hasPendingLicense && (
+                      <button onClick={() => router.push("/dashboard?tab=profile")} className="underline font-medium">
+                        Upload now
+                      </button>
+                    )}
+                  </p>
+                </div>
+              </div>
+            )}
+
             <VehicleCard draft={draft} />
             <CustomerInfo profile={profile ?? null} />
 

@@ -129,7 +129,7 @@ describe("carsApi", () => {
 
   // ── getCarBookedDates ───────────────────────────────────────────
 
-  it("getCarBookedDates returns an array of date strings", async () => {
+  it("getCarBookedDates returns car_id and unavailable_dates", async () => {
     const store = createTestStore();
 
     const result = await store.dispatch(
@@ -137,10 +137,11 @@ describe("carsApi", () => {
     );
 
     expect(result.data).toBeDefined();
-    expect(result.data?.booked_dates).toEqual([
-      "2026-04-01",
-      "2026-04-02",
-      "2026-04-03",
+    expect(result.data?.car_id).toBe(1);
+    expect(result.data?.unavailable_dates).toEqual([
+      { date: "2026-04-01", reason: "booked" },
+      { date: "2026-04-02", reason: "booked" },
+      { date: "2026-04-03", reason: "booked" },
     ]);
   });
 

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { Tag } from "@phosphor-icons/react";
 
@@ -8,6 +9,7 @@ type Category = {
   title: string;
   description: string;
   image: string;
+  filterLabel: string; // maps to category_label URL param
 };
 
 const categories: Category[] = [
@@ -17,6 +19,7 @@ const categories: Category[] = [
       "Comfortable and spacious, sedans are ideal for road trips with family or group outings where space and comfort matter.",
     image:
       "https://images.unsplash.com/photo-1550355291-bbee04a92027?ixlib=rb-4.0.3&auto=format&fit=crop&w=1400&q=80",
+    filterLabel: "Economy",
   },
   {
     title: "Hatchbacks",
@@ -24,6 +27,7 @@ const categories: Category[] = [
       "Compact, economical, and city-friendly. Hatchbacks are perfect for daily commutes and navigating busy streets.",
     image:
       "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1400&q=80",
+    filterLabel: "Economy",
   },
   {
     title: "Luxury / Premium Cars",
@@ -31,6 +35,7 @@ const categories: Category[] = [
       "For moments when the drive itself matters. Premium cars offer elevated comfort and refined interiors.",
     image:
       "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1400&q=80",
+    filterLabel: "Premium",
   },
   {
     title: "SUVs & Family Cars",
@@ -38,6 +43,7 @@ const categories: Category[] = [
       "Designed for space, comfort, and versatility — perfect for family travel and longer trips.",
     image:
       "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1400&q=80",
+    filterLabel: "SUV",
   },
 ];
 
@@ -70,6 +76,7 @@ const card: Variants = {
 };
 
 export default function RideCategories() {
+  const router = useRouter();
   const reduce = useReducedMotion();
 
   return (
@@ -125,6 +132,7 @@ export default function RideCategories() {
               variants={card}
               whileHover={reduce ? undefined : { y: -8 }}
               whileTap={reduce ? undefined : { scale: 0.985 }}
+              onClick={() => router.push(`/search-cars?category_label=${encodeURIComponent(c.filterLabel)}`)}
               className="group relative h-100 rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-shadow duration-500 bg-gray-200"
             >
               {/* Image */}

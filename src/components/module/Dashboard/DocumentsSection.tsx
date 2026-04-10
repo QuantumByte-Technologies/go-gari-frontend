@@ -95,6 +95,17 @@ function UploadDialog({ docType, open, onClose }: UploadDialogProps) {
   });
 
   const selectedFile = watch("file");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  // Generate preview URL when file is selected
+  React.useEffect(() => {
+    if (selectedFile && selectedFile instanceof File && selectedFile.type.startsWith("image/")) {
+      const url = URL.createObjectURL(selectedFile);
+      setPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+    setPreviewUrl(null);
+  }, [selectedFile]);
 
   const handleClose = () => {
     reset();
@@ -114,7 +125,25 @@ function UploadDialog({ docType, open, onClose }: UploadDialogProps) {
       await uploadDocument(formData).unwrap();
       toast.success("Document uploaded successfully");
       handleClose();
-    } catch {
+    } catch (err: unknown) {
+      const apiErr = err as { data?: Record<string, unknown> };
+      const data = apiErr?.data;
+      if (data) {
+        if (typeof data.detail === "string") {
+          toast.error(data.detail);
+          return;
+        }
+        for (const value of Object.values(data)) {
+          if (Array.isArray(value) && value.length > 0) {
+            toast.error(value[0] as string);
+            return;
+          }
+          if (typeof value === "string") {
+            toast.error(value);
+            return;
+          }
+        }
+      }
       toast.error("Failed to upload document");
     }
   };
@@ -190,11 +219,20 @@ function UploadDialog({ docType, open, onClose }: UploadDialogProps) {
               className="w-full border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:border-[#65AA36] transition-colors"
             >
               {selectedFile ? (
-                <div className="flex items-center justify-center gap-2 text-sm text-gray-700">
-                  <FileText size={20} weight="duotone" className="text-[#65AA36]" />
-                  <span className="truncate max-w-[200px]">
+                <div className="flex flex-col items-center gap-2 text-sm text-gray-700">
+                  {previewUrl ? (
+                    <img
+                      src={previewUrl}
+                      alt="Document preview"
+                      className="max-h-32 max-w-full rounded-lg object-contain border border-gray-200"
+                    />
+                  ) : (
+                    <FileText size={32} weight="duotone" className="text-[#65AA36]" />
+                  )}
+                  <span className="truncate max-w-[200px] text-xs text-gray-500">
                     {selectedFile.name}
                   </span>
+                  <span className="text-xs text-[#65AA36] font-medium">Click to change</span>
                 </div>
               ) : (
                 <>
@@ -339,17 +377,15 @@ export default function DocumentsSection() {
                   </p>
                 )}
 
-                {/* Delete button for rejected/pending documents */}
-                {(doc.status === "rejected" || doc.status === "pending") && (
+                {/* Delete button for rejected documents only */}
+                {doc.status === "rejected" && (
                   <button
                     onClick={() => handleDelete(doc.id)}
                     className="mt-2 inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700"
                     aria-label={`Delete ${DOCUMENT_LABELS[doc.document_type]}`}
                   >
                     <Trash size={14} weight="bold" />
-                    {doc.status === "rejected"
-                      ? "Delete & Re-upload"
-                      : "Delete"}
+                    Delete & Re-upload
                   </button>
                 )}
               </div>

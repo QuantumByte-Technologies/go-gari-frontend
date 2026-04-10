@@ -27,10 +27,8 @@ const quickLinks: FooterLink[] = [
 ];
 
 const services: FooterLink[] = [
-  { label: "Self-Drive Cars", href: "/services/self-drive" },
-  { label: "Chauffeur-Driven", href: "/services/chauffeur" },
-  { label: "Corporate Rentals", href: "/services/corporate" },
-  { label: "Long-Term Leasing", href: "/services/leasing" },
+  { label: "Self-Drive Cars", href: "/search-cars?drive=self" },
+  { label: "Chauffeur-Driven", href: "/search-cars?drive=chauffeur" },
 ];
 
 const support: FooterLink[] = [
@@ -197,12 +195,9 @@ export function Footer() {
             </p>
 
             <div className="flex items-center gap-6 text-sm">
-              <Link
-                href="/language"
-                className="text-gray-500 hover:text-[#5E9D34] transition-colors"
-              >
+              <span className="text-gray-500">
                 Available in English & বাংলা
-              </Link>
+              </span>
             </div>
           </div>
         </div>

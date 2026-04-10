@@ -32,7 +32,7 @@ const documentsApi = baseApi.injectEndpoints({
       invalidatesTags: [{ type: "Document", id: "LIST" }],
     }),
 
-    /** Delete a document (only rejected or pending can be deleted) */
+    /** Delete a document (only rejected documents can be deleted) */
     deleteDocument: builder.mutation<void, number>({
       query: (id) => ({
         url: `/accounts/documents/${id}/`,

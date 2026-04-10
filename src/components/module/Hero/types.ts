@@ -1,7 +1,7 @@
 // components/home/booking/types.ts
 import type { Icon } from "@phosphor-icons/react";
 
-export type DriveType = "self" | "driver" | "airport";
+export type DriveType = "self" | "driver";
 
 export type CarTypeOption = {
   id: string;

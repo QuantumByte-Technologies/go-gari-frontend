@@ -81,7 +81,7 @@ const carsApi = baseApi.injectEndpoints({
           lat: String(lat),
           lng: String(lng),
         });
-        if (radius !== undefined) params.set("radius", String(radius));
+        if (radius !== undefined) params.set("radius_km", String(radius));
         if (page !== undefined) params.set("page", String(page));
         return `/cars/nearby/?${params.toString()}`;
       },

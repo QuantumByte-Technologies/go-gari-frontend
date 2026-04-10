@@ -37,6 +37,8 @@ export function BookingModule() {
   const [selectedCarType, setSelectedCarType] = useState<string | null>(
     DEFAULTS.carTypeId,
   );
+  const [pickupCity, setPickupCity] = useState<string>("");
+  const [dropoffCity, setDropoffCity] = useState<string>("");
   const [pickupDate, setPickupDate] = useState<string>("");
   const [returnDate, setReturnDate] = useState<string>("");
   const [pickupTime, setPickupTime] = useState<string>("10:00");
@@ -47,8 +49,29 @@ export function BookingModule() {
   );
 
   const handleNavigateToSearch = useCallback(() => {
-    router.push("/search-cars");
-  }, [router]);
+    const params = new URLSearchParams();
+
+    if (pickupCity) params.set("city", pickupCity);
+    if (pickupDate) params.set("start_date", pickupDate);
+    if (returnDate) params.set("end_date", returnDate);
+
+    // Map drive type to backend drive_option
+    if (driveType === "self") params.set("drive", "self");
+    else if (driveType === "driver") params.set("drive", "chauffeur");
+
+    // Map car type to backend category
+    const categoryMap: Record<string, string> = {
+      sedan: "economy",
+      suv: "suv",
+      luxury: "premium",
+    };
+    if (selectedCarType && categoryMap[selectedCarType]) {
+      params.set("category_label", categoryMap[selectedCarType] === "economy" ? "Economy" : categoryMap[selectedCarType] === "suv" ? "SUV" : "Premium");
+    }
+
+    const qs = params.toString();
+    router.push(`/search-cars${qs ? `?${qs}` : ""}`);
+  }, [router, pickupCity, pickupDate, returnDate, driveType, selectedCarType]);
 
   return (
     <motion.div
@@ -107,6 +130,8 @@ export function BookingModule() {
                   }
                   placeholder="Select pickup city"
                   options={CITY_OPTIONS}
+                  value={pickupCity}
+                  onChange={setPickupCity}
                 />
 
                 <FieldSelect
@@ -122,6 +147,8 @@ export function BookingModule() {
                   }
                   placeholder="Select drop-off city"
                   options={CITY_OPTIONS}
+                  value={dropoffCity}
+                  onChange={setDropoffCity}
                 />
 
                 <FieldInput

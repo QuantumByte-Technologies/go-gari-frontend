@@ -74,10 +74,9 @@ export interface LoginResponse {
 }
 
 export interface RegisterResponse {
-  email: string;
+  message: string;
+  user_id: number;
   phone: string;
-  first_name: string;
-  last_name: string;
 }
 
 export interface TokenRefreshResponse {
@@ -87,5 +86,7 @@ export interface TokenRefreshResponse {
 
 export interface VerificationStatusResponse {
   is_phone_verified: boolean;
+  is_verified: boolean;
   verification_status: VerificationStatus;
+  documents: import("./documents").UserDocument[];
 }

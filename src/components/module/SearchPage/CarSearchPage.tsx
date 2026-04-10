@@ -23,7 +23,7 @@ const PRICE_RANGES = [
 
 const SEAT_OPTIONS = ["2 Seats", "4 Seats", "5 Seats", "7 Seats"];
 const TRANSMISSION_OPTIONS = ["Automatic", "Manual"];
-const FUEL_OPTIONS = ["Petrol", "Diesel", "Electric", "Hybrid", "CNG"];
+const FUEL_OPTIONS = ["Petrol", "Diesel", "Octane", "Electric", "Hybrid", "CNG"];
 const CAR_TYPE_OPTIONS = ["Economy", "Premium", "SUV"];
 
 type FilterKey = "price" | "seats" | "transmission" | "fuel" | "carType";
@@ -98,6 +98,7 @@ export default function CarSearchPage() {
       const fuelMap: Record<string, CarSearchParams["fuel_type"]> = {
         Petrol: "petrol",
         Diesel: "diesel",
+        Octane: "octane",
         Electric: "electric",
         Hybrid: "hybrid",
         CNG: "cng",

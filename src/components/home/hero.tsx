@@ -14,7 +14,7 @@ export function Hero() {
   const router = useRouter();
 
   const handleNavigateToSearch = useCallback(() => {
-    router.push("/search");
+    router.push("/search-cars");
   }, [router]);
 
   const handleHowItWorks = useCallback(() => {

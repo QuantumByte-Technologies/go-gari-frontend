@@ -5,7 +5,7 @@ export interface PricingCalculateParams {
   car_id: number;
   start_date: string;
   end_date: string;
-  drive_type: "self_drive" | "with_chauffeur";
+  with_chauffeur: boolean;
 }
 
 /** Response from the pricing calculation endpoint */

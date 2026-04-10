@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 
 type City = {
@@ -72,6 +73,7 @@ const cardItem: Variants = {
 };
 
 export default function CitySection() {
+  const router = useRouter();
   const reduce = useReducedMotion();
 
   return (
@@ -112,8 +114,9 @@ export default function CitySection() {
                 variants={cardItem}
                 whileHover={reduce ? undefined : { y: -6 }}
                 whileTap={reduce ? undefined : { scale: 0.985 }}
+                onClick={() => router.push(`/search-cars?city=${encodeURIComponent(city.name)}`)}
                 className={[
-                  "group relative overflow-hidden rounded-3xl shadow-lg hover:shadow-2xl transition-shadow duration-300",
+                  "group relative overflow-hidden rounded-3xl shadow-lg hover:shadow-2xl transition-shadow duration-300 cursor-pointer",
                   "bg-gray-100",
                   gridClass,
                   city.size === "normal" ? "aspect-square lg:aspect-auto" : "",

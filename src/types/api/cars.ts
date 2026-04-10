@@ -3,7 +3,7 @@
 // ── Enums ────────────────────────────────────────────────────────
 export type CarCategory = "economy" | "premium" | "suv";
 export type Transmission = "auto" | "manual";
-export type FuelType = "petrol" | "diesel" | "hybrid" | "electric" | "cng";
+export type FuelType = "petrol" | "diesel" | "octane" | "hybrid" | "electric" | "cng";
 export type DriveOption = "both" | "self_drive_only" | "chauffeur_only";
 
 // ── Data types ───────────────────────────────────────────────────
@@ -81,8 +81,14 @@ export interface CarAvailabilityResponse {
 }
 
 /** Response from the booked-dates endpoint */
+export interface UnavailableDateEntry {
+  date: string;
+  reason: string;
+}
+
 export interface CarBookedDatesResponse {
-  booked_dates: string[];
+  car_id: number;
+  unavailable_dates: UnavailableDateEntry[];
 }
 
 /** Parameters for nearby cars endpoint */

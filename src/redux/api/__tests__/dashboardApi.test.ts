@@ -13,13 +13,18 @@ describe("dashboardApi", () => {
     );
 
     expect(result.data).toBeDefined();
+    expect(result.data?.summary).toBeDefined();
+    expect(result.data?.summary.total_bookings).toBe(5);
+    expect(result.data?.summary.completed_trips).toBe(3);
+    expect(result.data?.summary.unread_notifications).toBe(1);
     expect(result.data?.upcoming_bookings).toHaveLength(1);
     expect(result.data?.upcoming_bookings[0].booking_id).toBe(
       "BK-20260401-001",
     );
     expect(result.data?.active_trips).toHaveLength(1);
     expect(result.data?.pending_payments).toHaveLength(1);
-    expect(result.data?.pending_payments[0].grand_total).toBe("18500.00");
+    expect(result.data?.pending_payments[0].amount).toBe("18500.00");
+    expect(result.data?.pending_payments[0].status).toBe("pending");
     expect(result.data?.recent_notifications).toHaveLength(1);
   });
 
