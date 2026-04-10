@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { CaretRight, Warning, ShieldCheck, IdentificationCard } from "@phosphor-icons/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { TabType } from "@/types/dashboard/types";
 import { TAB_LABELS } from "@/types/dashboard/constants";
 import { useGetUnreadCountQuery } from "@/redux/api/notificationsApi";
@@ -22,6 +22,7 @@ type Props = {
 
 export default function UserDashboard({ initialTab }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabType>("trips");
 
   // Fetch unread notification count from the API
@@ -34,9 +35,9 @@ export default function UserDashboard({ initialTab }: Props) {
   });
 
   useEffect(() => {
-    const tab = initialTab as TabType | undefined;
+    const tab = (searchParams.get("tab") ?? initialTab) as TabType | undefined;
     if (tab && TAB_LABELS[tab]) setActiveTab(tab);
-  }, [initialTab]);
+  }, [searchParams, initialTab]);
 
   const onNavigateToHome = useCallback(() => router.push("/"), [router]);
 
