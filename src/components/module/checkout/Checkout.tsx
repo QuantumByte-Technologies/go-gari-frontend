@@ -49,9 +49,11 @@ export default function CheckoutPage() {
   });
   const { data: verificationData } = useGetVerificationStatusQuery(undefined, {
     skip: !isAuthenticated,
+    refetchOnMountOrArgChange: true,
   });
   const { data: documentsData } = useGetDocumentsQuery(undefined, {
     skip: !isAuthenticated,
+    refetchOnMountOrArgChange: true,
   });
 
   // ─── Location state ───────────────────────────────────────────
