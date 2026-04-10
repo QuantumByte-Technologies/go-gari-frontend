@@ -66,7 +66,7 @@ export default function TripsSection() {
   };
 
   const handleViewDetails = (booking: BookingListItem) => {
-    router.push(`/cars/${booking.id}`);
+    router.push(`/bookings/${booking.id}`);
   };
 
   // Loading state

@@ -34,6 +34,7 @@ export interface BookingCreateRequest {
 export interface BookingListItem {
   id: number;
   booking_id: string;
+  car: number;
   car_name: string;
   car_brand: string;
   drive_type: DriveType;
