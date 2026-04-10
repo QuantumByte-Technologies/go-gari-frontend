@@ -180,15 +180,18 @@ export default function ProfileSection() {
       {/* Profile Photo & Status */}
       <div className="bg-white rounded-2xl border border-gray-200 p-6">
         <div className="flex items-center gap-6">
-          <div className="relative">
+          <div
+            className="relative cursor-pointer group"
+            onClick={() => avatarInputRef.current?.click()}
+          >
             {profile.avatar ? (
               <img
                 src={profile.avatar}
                 alt={profile.first_name}
-                className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+                className="w-24 h-24 rounded-full object-cover border-2 border-gray-200 group-hover:brightness-90 transition"
               />
             ) : (
-              <div className="w-24 h-24 bg-linear-to-br from-[#5E9D34] to-[#4a7d29] rounded-full flex items-center justify-center text-white text-3xl font-bold">
+              <div className="w-24 h-24 bg-linear-to-br from-[#5E9D34] to-[#4a7d29] rounded-full flex items-center justify-center text-white text-3xl font-bold group-hover:brightness-90 transition">
                 {profile.first_name.charAt(0)}
               </div>
             )}
@@ -200,7 +203,7 @@ export default function ProfileSection() {
               onChange={handleAvatarChange}
             />
             <button
-              onClick={() => avatarInputRef.current?.click()}
+              onClick={(e) => { e.stopPropagation(); avatarInputRef.current?.click(); }}
               disabled={isUploadingAvatar}
               className="absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 disabled:opacity-50"
             >
