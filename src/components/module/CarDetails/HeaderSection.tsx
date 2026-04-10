@@ -36,6 +36,7 @@ function fuelLabel(f: CarDetail["fuel_type"]): string {
   const map: Record<CarDetail["fuel_type"], string> = {
     petrol: "Petrol",
     diesel: "Diesel",
+    octane: "Octane",
     electric: "Electric",
     hybrid: "Hybrid",
     cng: "CNG",
