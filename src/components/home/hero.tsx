@@ -1,4 +1,3 @@
-// components/home/Hero.tsx
 "use client";
 
 import React, { useCallback } from "react";
@@ -17,9 +16,21 @@ export function Hero() {
     router.push("/search-cars");
   }, [router]);
 
+  // ✅ Smooth scroll instead of router.push
   const handleHowItWorks = useCallback(() => {
-    router.push("/#how-it-works");
-  }, [router]);
+    const section = document.getElementById("how-it-works");
+
+    if (section) {
+      const yOffset = -80; // adjust if you have sticky navbar
+      const y =
+        section.getBoundingClientRect().top + window.pageYOffset + yOffset;
+
+      window.scrollTo({
+        top: y,
+        behavior: "smooth",
+      });
+    }
+  }, []);
 
   return (
     <section className="relative w-full min-h-screen pb-20 overflow-hidden">
@@ -34,7 +45,8 @@ export function Hero() {
           sizes="100vw"
         />
         <div className="absolute inset-0 bg-black/50" />
-        <div className="absolute inset-0 bg-linear-to-r from-black/70 via-black/40 to-transparent" />
+        {/* FIXED gradient */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
       </div>
 
       {/* Angled bottom edge */}
@@ -101,20 +113,18 @@ export function Hero() {
               Find cars near you
             </Button>
 
-            {/* shadcn Button + icon via asChild (keeps design consistent & accessible) */}
             <Button
               variant="secondary"
               size="lg"
-              asChild
-              className="w-full sm:w-auto bg-white text-gray-900 hover:bg-gray-100"
+              className="w-full sm:w-auto bg-white text-gray-900 hover:bg-gray-100 cursor-pointer"
+              onClick={handleHowItWorks}
             >
-              <button onClick={handleHowItWorks} type="button">
-                How it works
-                <ArrowRight size={16} weight="bold" className="ml-2" />
-              </button>
+              How it works
+              <ArrowRight size={16} weight="bold" className="ml-2" />
             </Button>
           </motion.div>
 
+          {/* App badge */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

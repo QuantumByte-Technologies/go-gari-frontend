@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -59,7 +60,7 @@ function CarCardSkeleton({ featured = false }: { featured?: boolean }) {
       <div
         className={`bg-gray-200 ${
           featured
-            ? "h-72 lg:h-full min-h-[300px]"
+            ? "h-72 lg:h-full min-h-75"
             : "h-48 sm:w-48 sm:h-auto shrink-0"
         }`}
       />
@@ -90,7 +91,8 @@ function FeaturedCarCard({
   onToggleFavorite: () => void;
 }) {
   const router = useRouter();
-  const categoryLabel = CATEGORY_LABELS[car.category] ?? car.category.toUpperCase();
+  const categoryLabel =
+    CATEGORY_LABELS[car.category] ?? car.category.toUpperCase();
   const categoryColor = CATEGORY_COLORS[car.category] ?? "bg-[#5E9D34]";
 
   return (
@@ -101,7 +103,7 @@ function FeaturedCarCard({
       onClick={() => router.push(`/search-cars/${car.id}`)}
       className="lg:row-span-2 bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col h-full cursor-pointer"
     >
-      <div className="relative h-72 lg:h-full min-h-[300px] bg-gray-100">
+      <div className="relative h-72 lg:h-full min-h-75 bg-gray-100">
         <img
           src={car.primary_image || FALLBACK_IMAGE}
           alt={car.name}
@@ -119,7 +121,10 @@ function FeaturedCarCard({
 
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleFavorite();
+          }}
           className="absolute top-4 right-4 w-10 h-10 bg-white rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-md"
           aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
         >
@@ -147,7 +152,9 @@ function FeaturedCarCard({
           </div>
           <div className="flex items-center gap-2">
             <Gauge size={20} weight="duotone" className="text-gray-500" />
-            <span>{TRANSMISSION_LABELS[car.transmission] ?? car.transmission}</span>
+            <span>
+              {TRANSMISSION_LABELS[car.transmission] ?? car.transmission}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <GasPump size={20} weight="duotone" className="text-gray-500" />
@@ -166,7 +173,14 @@ function FeaturedCarCard({
             <p className="text-xs text-gray-500">{car.city}</p>
           </div>
 
-          <Button size="lg" onClick={(e) => { e.stopPropagation(); router.push(`/search-cars/${car.id}`); }}>
+          <Button
+            size="lg"
+            onClick={(e) => {
+              e.stopPropagation();
+              router.push(`/search-cars/${car.id}`);
+            }}
+            className="w-fit sm:w-auto bg-[#66aa3e] hover:bg-green-700 cursor-pointer"
+          >
             Book Now
           </Button>
         </div>
@@ -175,15 +189,10 @@ function FeaturedCarCard({
   );
 }
 
-function SmallCarCard({
-  car,
-  index,
-}: {
-  car: CarListItem;
-  index: number;
-}) {
+function SmallCarCard({ car, index }: { car: CarListItem; index: number }) {
   const router = useRouter();
-  const categoryLabel = CATEGORY_LABELS[car.category] ?? car.category.toUpperCase();
+  const categoryLabel =
+    CATEGORY_LABELS[car.category] ?? car.category.toUpperCase();
   const categoryColor = CATEGORY_COLORS[car.category] ?? "bg-[#5E9D34]";
 
   return (
@@ -232,7 +241,9 @@ function SmallCarCard({
             </div>
             <div className="flex items-center gap-1">
               <Gauge size={16} weight="duotone" className="text-gray-500" />
-              <span>{TRANSMISSION_LABELS[car.transmission] ?? car.transmission}</span>
+              <span>
+                {TRANSMISSION_LABELS[car.transmission] ?? car.transmission}
+              </span>
             </div>
             <div className="flex items-center gap-1">
               <GasPump size={16} weight="duotone" className="text-gray-500" />
@@ -249,8 +260,15 @@ function SmallCarCard({
             <span className="text-xs text-gray-600">/day</span>
           </div>
 
-          <Button size="sm" onClick={(e) => { e.stopPropagation(); router.push(`/search-cars/${car.id}`); }}>
-            Book
+          <Button
+            size="sm"
+            className="w-fit sm:w-auto bg-[#66aa3e] hover:bg-green-700 cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              router.push(`/search-cars/${car.id}`);
+            }}
+          >
+            Book Now
           </Button>
         </div>
       </div>
@@ -264,7 +282,10 @@ function EmptyState() {
       <p className="text-lg text-gray-500 mb-4">
         No cars available in your area right now.
       </p>
-      <Button asChild>
+      <Button
+        asChild
+        className="w-fit sm:w-auto bg-[#66aa3e] hover:bg-green-700 cursor-pointer"
+      >
         <Link href="/search-cars">Browse All Cars</Link>
       </Button>
     </div>
@@ -277,7 +298,12 @@ function ErrorState({ onRetry }: { onRetry: () => void }) {
       <p className="text-lg text-gray-500 mb-4">
         We couldn&apos;t load nearby cars. Please try again.
       </p>
-      <Button onClick={onRetry}>Retry</Button>
+      <Button
+        onClick={onRetry}
+        className="w-fit sm:w-auto bg-[#66aa3e] hover:bg-green-700 cursor-pointer"
+      >
+        Retry
+      </Button>
     </div>
   );
 }
@@ -304,12 +330,7 @@ export function NearbyCars() {
     }
   }, []);
 
-  const {
-    data,
-    isLoading,
-    isError,
-    refetch,
-  } = useGetNearbyCarsQuery({
+  const { data, isLoading, isError, refetch } = useGetNearbyCarsQuery({
     lat: coords.lat,
     lng: coords.lng,
     radius: NEARBY_RADIUS,

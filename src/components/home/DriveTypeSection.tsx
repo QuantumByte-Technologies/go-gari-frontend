@@ -1,232 +1,224 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import { motion } from "framer-motion";
-import { UserCheck, Car } from "@phosphor-icons/react";
+import React, { useState } from "react";
+import { motion, Variants } from "framer-motion";
+import { Car, UserCheck, CheckCircle } from "@phosphor-icons/react";
 import { Toggle } from "../ui/toggle";
 
+const driveOptions = [
+  {
+    id: "self",
+    title: "Self-Drive",
+    label: "Self-Drive Mode",
+    icon: Car,
+    description:
+      "Take full control of the drive. Ideal for independence, flexibility, and personal travel on your own schedule.",
+    preview: "You’ll have full control of the vehicle during your rental.",
+  },
+  {
+    id: "chauffeur",
+    title: "Chauffeur-Driven",
+    label: "Chauffeur Mode",
+    icon: UserCheck,
+    description:
+      "Sit back and relax while an experienced driver takes care of the road — perfect for workdays, airport trips, or when you simply don’t want to drive.",
+    preview: "A professional driver will be assigned to your booking.",
+  },
+] as const;
+
+type DriveType = (typeof driveOptions)[number]["id"];
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.12,
+      delayChildren: 0.05,
+    },
+  },
+};
+
+const fadeUpVariants: Variants = {
+  hidden: { opacity: 0, y: 18 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 120,
+      damping: 18,
+      mass: 0.7,
+    },
+  },
+};
+
 export function DriveTypeSection() {
-  const [isChauffeur, setIsChauffeur] = useState(false);
+  const [selectedDriveType, setSelectedDriveType] = useState<DriveType>("self");
 
-  const container = useMemo(
-    () => ({
-      hidden: { opacity: 0 },
-      show: {
-        opacity: 1,
-        transition: {
-          staggerChildren: 0.12,
-          delayChildren: 0.05,
-        },
-      },
-    }),
-    [],
-  );
+  const isChauffeur = selectedDriveType === "chauffeur";
 
-  const fadeLeft = useMemo(
-    () => ({
-      hidden: { opacity: 0, x: -18 },
-      show: {
-        opacity: 1,
-        x: 0,
-        transition: {
-          type: "spring" as const, // Add 'as const' to fix the type
-          stiffness: 120,
-          damping: 18,
-          mass: 0.7,
-        },
-      },
-    }),
-    [],
-  );
-
-  const card = useMemo(
-    () => ({
-      hidden: { opacity: 0, y: 18, scale: 0.98 },
-      show: {
-        opacity: 1,
-        y: 0,
-        scale: 1,
-        transition: {
-          type: "spring" as const, // Add 'as const' to fix the type
-          stiffness: 140,
-          damping: 18,
-          mass: 0.6,
-        },
-      },
-    }),
-    [],
-  );
-
-  // Helper function to handle drive type selection
-  const handleDriveTypeChange = (chauffeurMode: boolean) => {
-    setIsChauffeur(chauffeurMode);
-  };
+  const selectedOption = driveOptions.find(
+    (option) => option.id === selectedDriveType,
+  )!;
 
   return (
-    <section className="py-20 md:py-32 bg-gray-50 overflow-hidden relative">
-      {/* Decorative Orange Dot Pattern */}
+    <section className="relative overflow-hidden bg-gradient-to-br from-gray-50 via-white to-green-50/40 py-20 md:py-32">
+      {/* Background Decorations */}
+      <div className="pointer-events-none absolute right-8 top-8 h-28 w-28 rounded-full bg-[#5E9D34]/10 blur-2xl" />
+      <div className="pointer-events-none absolute bottom-12 left-8 h-36 w-36 rounded-full bg-orange-400/10 blur-3xl" />
+
       <div
-        className="absolute top-10 right-10 w-24 h-24 opacity-20 pointer-events-none"
+        className="pointer-events-none absolute right-10 top-10 h-24 w-24 opacity-20"
         style={{
           backgroundImage: "radial-gradient(#E8722A 2px, transparent 2px)",
           backgroundSize: "12px 12px",
         }}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
-          variants={container}
+          variants={containerVariants}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, amount: 0.25 }}
-          className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center"
+          className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12"
         >
           {/* Left Content */}
-          <motion.div variants={fadeLeft} className="lg:col-span-5 space-y-8">
-            <div>
-              <h2 className="text-[#5E9D34] font-semibold tracking-wide uppercase text-sm mb-2">
-                Choose How You Drive
-              </h2>
+          <motion.div variants={fadeUpVariants} className="lg:col-span-5">
+            <span className="mb-4 inline-flex rounded-full border border-[#5E9D34]/20 bg-[#5E9D34]/10 px-4 py-2 text-sm font-semibold uppercase tracking-wide text-[#5E9D34]">
+              Choose How You Drive
+            </span>
 
-              <h3 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6 leading-tight">
-                Self-drive or chauffeur-driven — it&apos;s your call.
-              </h3>
+            <h2 className="mb-6 text-3xl font-bold leading-tight text-gray-900 md:text-5xl">
+              Self-drive or chauffeur-driven — it&apos;s your call.
+            </h2>
 
-              <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-                GO GAARI lets you choose how you want to travel. Whether you
-                prefer the freedom of driving yourself or the ease of having a
-                professional driver, the choice stays with you.
-              </p>
+            <p className="mb-8 text-lg leading-relaxed text-gray-600">
+              GO GAARI lets you choose how you want to travel. Whether you
+              prefer the freedom of driving yourself or the ease of having a
+              professional driver, the choice stays with you.
+            </p>
 
-              <div className="flex items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100 w-fit">
-                {/* Toggle with visual feedback */}
+            {/* Toggle Box */}
+            <div className="mb-5 w-full rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:w-fit">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 <div className="flex items-center gap-3">
                   <Toggle
                     pressed={isChauffeur}
-                    onPressedChange={handleDriveTypeChange}
+                    onPressedChange={(pressed) =>
+                      setSelectedDriveType(pressed ? "chauffeur" : "self")
+                    }
                     aria-label="Toggle chauffeur mode"
-                    className="data-[state=on]:bg-[#5E9D34] data-[state=on]:text-white border cursor-pointer"
+                    className="cursor-pointer border data-[state=on]:bg-[#5E9D34] data-[state=on]:text-white"
                   />
-                  <span className="text-sm font-medium">
-                    {isChauffeur ? "Chauffeur Mode" : "Self-Drive Mode"}
+
+                  <span className="font-semibold text-gray-900">
+                    {selectedOption.label}
                   </span>
                 </div>
 
-                <span className="text-sm font-medium text-gray-600">
-                  Toggle between self-drive and chauffeur-driven options
+                <span className="text-sm text-gray-500">
+                  Switch between driving options
                 </span>
               </div>
-
-              {/* Live preview of selected mode */}
-              <motion.div
-                key={isChauffeur ? "chauffeur" : "self"}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-4 p-4 bg-[#5E9D34]/5 rounded-lg border border-[#5E9D34]/20"
-              >
-                <p className="text-sm text-gray-700">
-                  <span className="font-semibold text-[#5E9D34]">
-                    {isChauffeur ? "Chauffeur-Driven" : "Self-Drive"} selected:
-                  </span>{" "}
-                  {isChauffeur
-                    ? "Professional driver will be assigned to your booking."
-                    : "You'll have full control of the vehicle during your rental."}
-                </p>
-              </motion.div>
             </div>
+
+            {/* Selected Preview */}
+            <motion.div
+              key={selectedDriveType}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-2xl border border-[#5E9D34]/20 bg-[#5E9D34]/10 p-5"
+            >
+              <div className="flex gap-3">
+                <CheckCircle
+                  size={22}
+                  weight="fill"
+                  className="mt-0.5 shrink-0 text-[#5E9D34]"
+                />
+
+                <p className="text-sm leading-relaxed text-gray-700">
+                  <span className="font-semibold text-[#5E9D34]">
+                    {selectedOption.title} selected:
+                  </span>{" "}
+                  {selectedOption.preview}
+                </p>
+              </div>
+            </motion.div>
           </motion.div>
 
           {/* Right Cards */}
-          <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Self Drive Card */}
-            <motion.button
-              type="button"
-              variants={card}
-              onClick={() => handleDriveTypeChange(false)}
-              whileHover={{ y: -3 }}
-              whileTap={{ scale: 0.99 }}
-              className={[
-                "will-change-transform text-left p-8 rounded-2xl border-2 transition-all duration-300 relative group overflow-hidden",
-                !isChauffeur
-                  ? "bg-white border-[#5E9D34] shadow-lg shadow-[#5E9D34]/10"
-                  : "bg-white border-transparent shadow-sm hover:shadow-md opacity-80 hover:opacity-100",
-              ].join(" ")}
-            >
-              <div
-                className={[
-                  "absolute top-0 left-0 right-0 h-1 bg-orange-500 transition-opacity duration-300",
-                  !isChauffeur ? "opacity-100" : "opacity-0",
-                ].join(" ")}
-              />
+          <motion.div
+            variants={containerVariants}
+            className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:col-span-7"
+          >
+            {driveOptions.map((option) => {
+              const Icon = option.icon;
+              const isSelected = selectedDriveType === option.id;
 
-              <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-green-50 to-green-100 flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform duration-300">
-                <Car size={28} weight="duotone" className="text-[#5E9D34]" />
-              </div>
+              return (
+                <motion.button
+                  key={option.id}
+                  type="button"
+                  variants={fadeUpVariants}
+                  onClick={() => setSelectedDriveType(option.id)}
+                  whileHover={{ y: -5 }}
+                  whileTap={{ scale: 0.98 }}
+                  aria-pressed={isSelected}
+                  className={[
+                    "group relative overflow-hidden rounded-3xl border-2 bg-white p-8 text-left transition-all duration-300",
+                    isSelected
+                      ? "border-[#5E9D34] shadow-xl shadow-[#5E9D34]/15"
+                      : "border-transparent shadow-sm hover:border-[#5E9D34]/25 hover:shadow-lg",
+                  ].join(" ")}
+                >
+                  <div
+                    className={[
+                      "absolute inset-x-0 top-0 h-1.5 bg-orange-500 transition-opacity duration-300",
+                      isSelected ? "opacity-100" : "opacity-0",
+                    ].join(" ")}
+                  />
 
-              <h4 className="text-xl font-bold text-gray-900 mb-3">
-                Self-Drive
-              </h4>
+                  <div className="mb-6 flex items-center justify-between">
+                    <div
+                      className={[
+                        "flex h-16 w-16 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110",
+                        isSelected
+                          ? "bg-[#5E9D34] text-white"
+                          : "bg-gradient-to-br from-green-50 to-green-100 text-[#5E9D34]",
+                      ].join(" ")}
+                    >
+                      <Icon size={32} weight="duotone" />
+                    </div>
 
-              <p className="text-gray-600 leading-relaxed">
-                Take full control of the drive. Ideal for independence,
-                flexibility, and personal travel on your own schedule.
-              </p>
+                    <div
+                      className={[
+                        "flex h-7 w-7 items-center justify-center rounded-full border transition-all duration-300",
+                        isSelected
+                          ? "border-[#5E9D34] bg-[#5E9D34] text-white"
+                          : "border-gray-200 text-transparent",
+                      ].join(" ")}
+                    >
+                      <CheckCircle size={18} weight="fill" />
+                    </div>
+                  </div>
 
-              <div
-                className={[
-                  "absolute top-4 right-4 w-2 h-2 rounded-full bg-[#5E9D34] transition-opacity duration-300",
-                  !isChauffeur ? "opacity-100 animate-pulse" : "opacity-0",
-                ].join(" ")}
-              />
-            </motion.button>
+                  <h3 className="mb-3 text-2xl font-bold text-gray-900">
+                    {option.title}
+                  </h3>
 
-            {/* Chauffeur Card */}
-            <motion.button
-              type="button"
-              variants={card}
-              onClick={() => handleDriveTypeChange(true)}
-              whileHover={{ y: -3 }}
-              whileTap={{ scale: 0.99 }}
-              className={[
-                "will-change-transform text-left p-8 rounded-2xl border-2 transition-all duration-300 relative group overflow-hidden",
-                isChauffeur
-                  ? "bg-white border-[#5E9D34] shadow-lg shadow-[#5E9D34]/10"
-                  : "bg-white border-transparent shadow-sm hover:shadow-md opacity-80 hover:opacity-100",
-              ].join(" ")}
-            >
-              <div
-                className={[
-                  "absolute top-0 left-0 right-0 h-1 bg-orange-500 transition-opacity duration-300",
-                  isChauffeur ? "opacity-100" : "opacity-0",
-                ].join(" ")}
-              />
+                  <p className="leading-relaxed text-gray-600">
+                    {option.description}
+                  </p>
 
-              <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-green-50 to-green-100 flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform duration-300">
-                <UserCheck
-                  size={28}
-                  weight="duotone"
-                  className="text-[#5E9D34]"
-                />
-              </div>
-
-              <h4 className="text-xl font-bold text-gray-900 mb-3">
-                Chauffeur-Driven
-              </h4>
-
-              <p className="text-gray-600 leading-relaxed">
-                Sit back and relax while an experienced driver takes care of the
-                road — perfect for workdays, airport trips, or when you simply
-                don&apos;t want to drive.
-              </p>
-
-              <div
-                className={[
-                  "absolute top-4 right-4 w-2 h-2 rounded-full bg-[#5E9D34] transition-opacity duration-300",
-                  isChauffeur ? "opacity-100 animate-pulse" : "opacity-0",
-                ].join(" ")}
-              />
-            </motion.button>
-          </div>
+                  <div className="mt-8 text-sm font-semibold text-[#5E9D34]">
+                    {isSelected ? "Currently selected" : "Select this option"}
+                  </div>
+                </motion.button>
+              );
+            })}
+          </motion.div>
         </motion.div>
       </div>
     </section>
