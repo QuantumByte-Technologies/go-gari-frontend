@@ -8,16 +8,35 @@ import {
   EnvelopeSimple,
   Spinner,
 } from "@phosphor-icons/react";
-import { useGetNotificationsQuery } from "@/redux/api/notificationsApi";
+import { useRouter } from "next/navigation";
+import {
+  useGetNotificationsQuery,
+  useMarkAsReadMutation,
+} from "@/redux/api/notificationsApi";
 import type { Notification } from "@/types/api/notifications";
 import { Button } from "@/components/ui/button";
 
 export default function InboxSection() {
+  const router = useRouter();
+  const [markAsRead] = useMarkAsReadMutation();
   const {
     data,
     isLoading,
     error,
-  } = useGetNotificationsQuery();
+  } = useGetNotificationsQuery(undefined, { pollingInterval: 20_000 });
+
+  const handleNotificationClick = async (notification: Notification) => {
+    if (!notification.is_read) {
+      try {
+        await markAsRead(notification.id).unwrap();
+      } catch {
+        // silent — UI still navigates
+      }
+    }
+    if (notification.link_url) {
+      router.push(notification.link_url);
+    }
+  };
 
   const notifications = data?.results ?? [];
   const unreadCount = notifications.filter((n) => !n.is_read).length;
@@ -80,6 +99,7 @@ export default function InboxSection() {
             <NotificationItem
               key={notification.id}
               notification={notification}
+              onClick={() => handleNotificationClick(notification)}
             />
           ))}
         </div>
@@ -88,16 +108,24 @@ export default function InboxSection() {
   );
 }
 
-function NotificationItem({ notification }: { notification: Notification }) {
+function NotificationItem({
+  notification,
+  onClick,
+}: {
+  notification: Notification;
+  onClick: () => void;
+}) {
   const timeAgo = getTimeAgo(notification.created_at);
+  const isClickable = !!notification.link_url;
 
   return (
-    <div
-      className={`bg-white rounded-2xl border overflow-hidden transition-colors ${
-        notification.is_read
-          ? "border-gray-200"
-          : "border-[#5E9D34] shadow-sm"
-      }`}
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={!isClickable && notification.is_read}
+      className={`w-full text-left bg-white rounded-2xl border overflow-hidden transition-colors ${
+        notification.is_read ? "border-gray-200" : "border-[#5E9D34] shadow-sm"
+      } ${isClickable ? "hover:bg-gray-50 cursor-pointer" : ""}`}
     >
       <div className="p-5">
         <div className="flex items-start gap-4">
@@ -128,7 +156,7 @@ function NotificationItem({ notification }: { notification: Notification }) {
           </div>
         </div>
       </div>
-    </div>
+    </button>
   );
 }
 

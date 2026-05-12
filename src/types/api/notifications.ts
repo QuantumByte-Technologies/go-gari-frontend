@@ -11,6 +11,8 @@ export interface Notification {
   channel: NotificationChannel;
   subject: string;
   message: string;
+  /** Optional deep-link target — e.g. "/bookings/123" or "/trips/45". Empty string means no link. */
+  link_url: string;
   is_read: boolean;
   is_sent: boolean;
   sent_at: string | null;

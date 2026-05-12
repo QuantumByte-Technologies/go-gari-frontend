@@ -23,6 +23,7 @@ import {
 import type { ChauffeurReviewFormData } from "@/schemas/review";
 import ReviewForm from "./ReviewForm";
 import { Button } from "@/components/ui/button";
+import { formatApiError } from "@/utils/apiMessage";
 
 type Props = {
   chauffeurId: number;
@@ -60,10 +61,12 @@ export default function ChauffeurDetailView({ chauffeurId }: Props) {
     async (data: ChauffeurReviewFormData) => {
       try {
         await createReview({ id: chauffeurId, data }).unwrap();
-        toast.success("Review submitted successfully");
+        // Backend returns review data, no message. Use sensible default.
+        toast.success("Review submitted");
         setShowReviewForm(false);
-      } catch {
-        toast.error("Failed to submit review");
+      } catch (err) {
+        // DRF serializer validation can produce per-field errors
+        toast.error(formatApiError(err, "Failed to submit review"));
       }
     },
     [chauffeurId, createReview],
@@ -74,8 +77,9 @@ export default function ChauffeurDetailView({ chauffeurId }: Props) {
       try {
         await deleteReview({ chauffeurId, reviewId }).unwrap();
         toast.success("Review deleted");
-      } catch {
-        toast.error("Failed to delete review");
+      } catch (err) {
+        // Backend: {"detail": "You do not have permission to delete this review."}
+        toast.error(formatApiError(err, "Failed to delete review"));
       }
     },
     [chauffeurId, deleteReview],

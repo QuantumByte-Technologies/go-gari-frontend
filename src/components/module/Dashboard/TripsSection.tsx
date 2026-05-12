@@ -10,6 +10,7 @@ import type { BookingListItem, BookingStatus } from "@/types/api/bookings";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import BookingCard from "./BookingCard";
+import { formatApiError } from "@/utils/apiMessage";
 
 type BookingTab = "upcoming" | "active" | "completed" | "cancelled";
 
@@ -66,10 +67,12 @@ export default function TripsSection() {
 
   const handleCancel = async (booking: BookingListItem) => {
     try {
-      await cancelBooking(booking.id).unwrap();
-      toast.success("Booking cancelled successfully");
-    } catch {
-      toast.error("Failed to cancel booking");
+      const resp = await cancelBooking(booking.id).unwrap();
+      // Backend: {"detail": "Booking cancelled successfully.", "booking_id": "..."}
+      toast.success(resp.detail || "Booking cancelled");
+    } catch (err) {
+      // Backend uses {"detail": "..."} for booking errors
+      toast.error(formatApiError(err, "Failed to cancel booking"));
     }
   };
 
@@ -79,8 +82,9 @@ export default function TripsSection() {
         booking_id: booking.id,
       }).unwrap();
       window.location.href = result.payment_url;
-    } catch {
-      toast.error("Failed to initiate payment");
+    } catch (err) {
+      // /payments/initiate/ uses {"error": "..."} shape
+      toast.error(formatApiError(err, "Failed to initiate payment"));
     }
   };
 

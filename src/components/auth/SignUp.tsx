@@ -68,8 +68,12 @@ export function SignupForm() {
     };
 
     try {
-      await registerUser(payload).unwrap();
-      toast.success("Account created! Please verify your phone number.");
+      const resp = await registerUser(payload).unwrap();
+      // Backend returns { message: "Registration successful. OTP sent..." }
+      toast.success(
+        (resp as { message?: string }).message ??
+          "Account created! Please verify your phone number.",
+      );
       router.push(`/auth/verify-otp?phone=${encodeURIComponent(data.phone)}`);
     } catch (err) {
       const error = err as { data?: ApiError; status?: number };

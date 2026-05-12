@@ -20,6 +20,7 @@ import {
   useUpdateProfileMutation,
   useUploadAvatarMutation,
 } from "@/redux/api/authApi";
+import { formatApiError } from "@/utils/apiMessage";
 import { toast } from "sonner";
 
 export default function ProfileSection() {
@@ -39,9 +40,10 @@ export default function ProfileSection() {
     formData.append("avatar", file);
     try {
       await uploadAvatar(formData).unwrap();
+      // Backend returns the updated profile, not a message. Keep a sensible default.
       toast.success("Avatar updated");
-    } catch {
-      toast.error("Failed to update avatar");
+    } catch (err) {
+      toast.error(formatApiError(err, "Failed to update avatar"));
     }
   };
 
@@ -73,10 +75,12 @@ export default function ProfileSection() {
         dob: formData.dob || null,
         country: formData.country,
       }).unwrap();
-      toast.success("Profile updated successfully");
+      // Backend returns the updated profile, not a message. Keep a sensible default.
+      toast.success("Profile updated");
       setIsEditing(false);
-    } catch {
-      toast.error("Failed to update profile");
+    } catch (err) {
+      // PATCH /profile/ can return DRF field errors like {"dob": ["..."]}
+      toast.error(formatApiError(err, "Failed to update profile"));
     }
   };
 

@@ -10,7 +10,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { forgotPasswordSchema, type ForgotPasswordFormData } from "@/schemas/auth";
 import { useForgotPasswordMutation } from "@/redux/api/authApi";
-import type { ApiError } from "@/types/api/common";
+import { formatApiError } from "@/utils/apiMessage";
 
 export default function ForgotPasswordPage() {
   const [forgotPassword, { isLoading, isSuccess }] =
@@ -21,7 +21,6 @@ export default function ForgotPasswordPage() {
     handleSubmit,
     formState: { errors },
     setError,
-    getValues,
   } = useForm<ForgotPasswordFormData>({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: { email: "" },
@@ -31,10 +30,8 @@ export default function ForgotPasswordPage() {
     try {
       await forgotPassword(data).unwrap();
     } catch (err) {
-      const error = err as { data?: ApiError; status?: number };
       setError("root", {
-        message:
-          error.data?.detail ?? "Failed to send reset email. Please try again.",
+        message: formatApiError(err, "Failed to send reset email. Please try again."),
       });
     }
   };
@@ -57,7 +54,7 @@ export default function ForgotPasswordPage() {
           </Link>
 
           {isSuccess ? (
-            <SuccessState email={getValues("email")} />
+            <SuccessState />
           ) : (
             <>
               {/* Header */}
@@ -165,7 +162,10 @@ export default function ForgotPasswordPage() {
   );
 }
 
-function SuccessState({ email }: { email: string }) {
+// Intentionally generic — we MUST NOT confirm whether the email was registered.
+// Backend deliberately responds the same way for registered & unregistered emails
+// (user-enumeration prevention). Displaying the entered email here would leak that.
+function SuccessState() {
   return (
     <motion.div
       className="text-center"
@@ -178,12 +178,11 @@ function SuccessState({ email }: { email: string }) {
       </div>
       <h2 className="text-2xl font-bold text-gray-900 mb-2">Check Your Email</h2>
       <p className="text-gray-600 text-sm mb-6">
-        We&apos;ve sent a password reset link to{" "}
-        <span className="font-semibold text-gray-800">{email}</span>. Please
-        check your inbox and follow the instructions.
+        If that email is registered with us, you&apos;ll receive a password reset
+        link shortly. Please check your inbox and spam folder.
       </p>
       <p className="text-xs text-gray-500">
-        Didn&apos;t receive the email? Check your spam folder or try again.
+        Didn&apos;t receive anything after a few minutes? Try again.
       </p>
     </motion.div>
   );

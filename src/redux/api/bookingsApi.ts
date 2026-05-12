@@ -59,8 +59,11 @@ const bookingsApi = baseApi.injectEndpoints({
       ],
     }),
 
-    /** Cancel an unpaid booking */
-    cancelBooking: builder.mutation<void, number>({
+    /** Cancel an unpaid booking — backend returns {detail, booking_id} */
+    cancelBooking: builder.mutation<
+      { detail: string; booking_id: string },
+      number
+    >({
       query: (id) => ({
         url: `/bookings/${id}/cancel/`,
         method: "POST",

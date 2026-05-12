@@ -19,6 +19,7 @@ import {
   useDeleteDocumentMutation,
 } from "@/redux/api/documentsApi";
 import type { DocumentType, DocumentStatus } from "@/types/api/documents";
+import { formatApiError } from "@/utils/apiMessage";
 import {
   documentUploadSchema,
   type DocumentUploadFormData,
@@ -123,28 +124,14 @@ function UploadDialog({ docType, open, onClose }: UploadDialogProps) {
 
     try {
       await uploadDocument(formData).unwrap();
-      toast.success("Document uploaded successfully");
+      // Backend returns document data, no message field. Keep sensible default.
+      toast.success("Document uploaded");
       handleClose();
-    } catch (err: unknown) {
-      const apiErr = err as { data?: Record<string, unknown> };
-      const data = apiErr?.data;
-      if (data) {
-        if (typeof data.detail === "string") {
-          toast.error(data.detail);
-          return;
-        }
-        for (const value of Object.values(data)) {
-          if (Array.isArray(value) && value.length > 0) {
-            toast.error(value[0] as string);
-            return;
-          }
-          if (typeof value === "string") {
-            toast.error(value);
-            return;
-          }
-        }
-      }
-      toast.error("Failed to upload document");
+    } catch (err) {
+      // DRF errors here come as field arrays:
+      //   {"document_type": ["You already have this document uploaded."]}
+      //   {"expiry_date": ["Expiry date is required for ..."]}
+      toast.error(formatApiError(err, "Failed to upload document"));
     }
   };
 
@@ -293,8 +280,9 @@ export default function DocumentsSection() {
     try {
       await deleteDocument(id).unwrap();
       toast.success("Document deleted");
-    } catch {
-      toast.error("Failed to delete document");
+    } catch (err) {
+      // Backend: {"error": "Only rejected documents can be deleted."}
+      toast.error(formatApiError(err, "Failed to delete document"));
     }
   };
 

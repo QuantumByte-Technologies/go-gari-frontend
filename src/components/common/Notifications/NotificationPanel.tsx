@@ -38,7 +38,12 @@ function timeAgo(dateStr: string): string {
 
 export default function NotificationPanel({ onClose }: Props) {
   const router = useRouter();
-  const { data, isLoading } = useGetNotificationsQuery({ page: 1 });
+  // Poll the notification list so the dropdown shows fresh data while
+  // it's open (admin approvals, payment redirects, etc.).
+  const { data, isLoading } = useGetNotificationsQuery(
+    { page: 1 },
+    { pollingInterval: 15_000 },
+  );
   const [markAsRead] = useMarkAsReadMutation();
 
   const notifications = data?.results ?? [];
@@ -52,8 +57,12 @@ export default function NotificationPanel({ onClose }: Props) {
           // silent fail — UX still proceeds
         }
       }
+      if (notification.link_url) {
+        onClose?.();
+        router.push(notification.link_url);
+      }
     },
-    [markAsRead],
+    [markAsRead, router, onClose],
   );
 
   const handleViewAll = () => {

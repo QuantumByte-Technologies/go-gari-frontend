@@ -6,10 +6,8 @@ import { toast } from "sonner";
 import { Shield, CheckCircle2, Loader2, AlertTriangle } from "lucide-react";
 import { VehicleCard } from "./VehicleCard";
 import { CustomerInfo } from "./CustomerInfo";
-import { PaymentMethod } from "./PaymentMethod";
 import { Breadcrumb } from "./Breadcrumb";
 import { useCreateBookingMutation } from "@/redux/api/bookingsApi";
-import { useInitiatePaymentMutation } from "@/redux/api/paymentsApi";
 import { useGetProfileQuery, useGetVerificationStatusQuery } from "@/redux/api/authApi";
 import { useGetDocumentsQuery } from "@/redux/api/documentsApi";
 import { selectIsAuthenticated } from "@/redux/features/auth/authSlice";
@@ -21,6 +19,7 @@ import {
   type BookingDraft,
 } from "@/utils/checkout";
 import type { BookingCreateRequest } from "@/types/api/bookings";
+import { formatApiError } from "@/utils/apiMessage";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -65,12 +64,13 @@ export default function CheckoutPage() {
   const [termsAccepted, setTermsAccepted] = useState(false);
 
   // ─── Mutations ────────────────────────────────────────────────
+  // Reservation requests are no longer paid for inline — they must be
+  // approved by an admin first. Payment kicks off later from the booking
+  // detail / dashboard once the admin moves it to `pending_payment`.
   const [createBooking, { isLoading: isCreating }] =
     useCreateBookingMutation();
-  const [initiatePayment, { isLoading: isInitiating }] =
-    useInitiatePaymentMutation();
 
-  const isSubmitting = isCreating || isInitiating;
+  const isSubmitting = isCreating;
 
   // ─── Form validation ──────────────────────────────────────────
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -137,55 +137,19 @@ export default function CheckoutPage() {
     };
 
     try {
-      // Step 1: Create booking
+      // Submit the reservation request. New bookings come back with
+      // status="pending_approval" — admin must approve before payment.
       const booking = await createBooking(bookingPayload).unwrap();
-      toast.success("Booking created successfully!");
-
-      // Step 2: Initiate SSLCommerz payment
-      try {
-        const payment = await initiatePayment({
-          booking_id: booking.id,
-        }).unwrap();
-
-        // Step 3: Clean up and redirect to SSLCommerz
-        clearBookingDraft();
-        window.location.href = payment.payment_url;
-      } catch {
-        // Payment initiation failed — booking was created though
-        toast.error(
-          "Payment could not be initiated. You can pay from your dashboard.",
-        );
-        clearBookingDraft();
-        router.push("/dashboard");
-      }
-    } catch (err: unknown) {
-      const apiErr = err as { data?: Record<string, unknown> };
-      const data = apiErr?.data;
-      if (data) {
-        // Handle non_field_errors (array of strings)
-        const nonFieldErrors = data.non_field_errors;
-        if (Array.isArray(nonFieldErrors) && nonFieldErrors.length > 0) {
-          toast.error(nonFieldErrors[0] as string);
-          return;
-        }
-        // Handle detail string
-        if (typeof data.detail === "string") {
-          toast.error(data.detail);
-          return;
-        }
-        // Handle field-level errors (show first one found)
-        for (const value of Object.values(data)) {
-          if (Array.isArray(value) && value.length > 0) {
-            toast.error(value[0] as string);
-            return;
-          }
-          if (typeof value === "string") {
-            toast.error(value);
-            return;
-          }
-        }
-      }
-      toast.error("Failed to create booking. Please try again.");
+      toast.success(
+        `Reservation request ${booking.booking_id} submitted. We'll notify you once it's approved.`,
+      );
+      clearBookingDraft();
+      // Take the user to the booking detail page so they can poll status.
+      router.push(`/bookings/${booking.id}`);
+    } catch (err) {
+      // Backend returns either {detail: ...} (conflict) or DRF field errors
+      // (validation). formatApiError handles both.
+      toast.error(formatApiError(err, "Failed to submit reservation. Please try again."));
     }
   };
 
@@ -365,7 +329,18 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            <PaymentMethod />
+            {/* Payment method selection is deferred to the "Pay Now" step
+                on the booking detail page, once an admin approves the
+                reservation request. */}
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 text-sm text-amber-900">
+              <p className="font-semibold mb-1">Payment after approval</p>
+              <p>
+                You&apos;re sending a reservation <em>request</em>. Once our team
+                reviews and approves it, we&apos;ll notify you by email and SMS
+                — at that point you can come back and complete payment.
+                You won&apos;t be charged today.
+              </p>
+            </div>
           </div>
 
           {/* Right Column - Order Summary */}
@@ -462,11 +437,7 @@ export default function CheckoutPage() {
                   {isSubmitting && (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   )}
-                  {isCreating
-                    ? "Creating Booking..."
-                    : isInitiating
-                      ? "Initiating Payment..."
-                      : "Confirm & Pay"}
+                  {isCreating ? "Submitting..." : "Request Reservation"}
                 </button>
 
                 <div className="flex items-center justify-center gap-4 text-xs text-gray-400">

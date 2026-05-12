@@ -18,6 +18,13 @@ export interface TripListItem {
   id: number;
   booking_id: string;
   car_name: string;
+  car_brand: string;
+  car_model: string;
+  drive_type: string;
+  start_date: string;
+  end_date: string;
+  pickup_location_address: string;
+  dropoff_location_address: string;
   status: TripStatus;
   started_at: string | null;
   completed_at: string | null;
@@ -26,9 +33,6 @@ export interface TripListItem {
 
 /** Trip as returned in detail endpoint */
 export interface TripDetail extends TripListItem {
-  drive_type: string;
-  start_date: string;
-  end_date: string;
   updated_at: string;
   photos: TripPhoto[];
 }

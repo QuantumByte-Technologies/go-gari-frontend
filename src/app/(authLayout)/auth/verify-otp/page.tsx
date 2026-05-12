@@ -8,7 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import logo from "@/assets/logo/logo-up.png";
 import { useVerifyOtpMutation, useResendOtpMutation } from "@/redux/api/authApi";
-import type { ApiError } from "@/types/api/common";
+import { formatApiError } from "@/utils/apiMessage";
 import { toast } from "sonner";
 
 const OTP_LENGTH = 6;
@@ -85,14 +85,18 @@ export default function VerifyOtpPage() {
     if (!isOtpComplete || !phone) return;
 
     try {
-      await verifyOtp({ phone, code: otpValue }).unwrap();
-      toast.success("Phone number verified successfully!");
+      const resp = await verifyOtp({ phone, code: otpValue }).unwrap();
+      // Backend returns { message: "Phone verified successfully." } or "Phone already verified."
+      toast.success(
+        (resp as { message?: string }).message ?? "Phone number verified successfully!",
+      );
       router.push("/auth/signin");
     } catch (err) {
-      const error = err as { data?: ApiError; status?: number };
-      setError(
-        error.data?.detail ?? "Invalid or expired OTP. Please try again.",
-      );
+      // Backend errors use the `error` key, not `detail`:
+      //   { "error": "Invalid OTP. N attempts remaining." }
+      //   { "error": "OTP expired. ..." }
+      //   { "error": "Too many wrong attempts. ..." }
+      setError(formatApiError(err, "Invalid or expired OTP. Please try again."));
     }
   };
 
@@ -100,14 +104,16 @@ export default function VerifyOtpPage() {
     if (countdown > 0 || !phone) return;
 
     try {
-      await resendOtp({ phone }).unwrap();
-      toast.success("OTP sent successfully!");
+      const resp = await resendOtp({ phone }).unwrap();
+      toast.success(
+        (resp as { message?: string }).message ?? "OTP sent successfully!",
+      );
       setCountdown(RESEND_COOLDOWN);
       setOtp(Array(OTP_LENGTH).fill(""));
       inputRefs.current[0]?.focus();
     } catch (err) {
-      const error = err as { data?: ApiError; status?: number };
-      toast.error(error.data?.detail ?? "Failed to resend OTP.");
+      // Backend uses `error` key for resend failures too
+      toast.error(formatApiError(err, "Failed to resend OTP."));
     }
   };
 

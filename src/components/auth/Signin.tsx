@@ -11,7 +11,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginFormData } from "@/schemas/auth";
 import { useLoginMutation } from "@/redux/api/authApi";
-import type { ApiError } from "@/types/api/common";
+import { formatApiError, formatApiMessage } from "@/utils/apiMessage";
 import { toast } from "sonner";
 
 // Cubic-bezier tuples (TypeScript-safe for strict Framer Motion typings)
@@ -80,29 +80,15 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      await login(data).unwrap();
-      toast.success("Welcome back!");
+      const resp = await login(data).unwrap();
+      toast.success(formatApiMessage(resp, "Welcome back!"));
       router.push("/");
     } catch (err) {
-      const error = err as { data?: ApiError; status?: number };
-
-      if (error.status === 401) {
-        setError("root", {
-          message: "Invalid email or password. Please try again.",
-        });
-      } else if (error.data?.detail) {
-        setError("root", { message: error.data.detail });
-      } else if (error.data?.email) {
-        setError("email", {
-          message: Array.isArray(error.data.email)
-            ? error.data.email[0]
-            : error.data.email,
-        });
-      } else {
-        setError("root", {
-          message: "Something went wrong. Please try again.",
-        });
-      }
+      // Surface whatever the backend actually said — covers
+      // {detail}, {message}, {non_field_errors:[…]}, and per-field arrays.
+      setError("root", {
+        message: formatApiError(err, "Invalid email or password. Please try again."),
+      });
     }
   };
 

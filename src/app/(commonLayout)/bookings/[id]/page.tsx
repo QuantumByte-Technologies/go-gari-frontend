@@ -11,6 +11,7 @@ import { useSelector } from "react-redux";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { formatBDT } from "@/utils/checkout";
+import { formatApiError } from "@/utils/apiMessage";
 import type { BookingStatus } from "@/types/api/bookings";
 import {
   CaretRight,
@@ -75,18 +76,19 @@ export default function BookingDetailPage() {
     try {
       const result = await initiatePayment({ booking_id: booking.id }).unwrap();
       window.location.href = result.payment_url;
-    } catch {
-      toast.error("Failed to initiate payment");
+    } catch (err) {
+      toast.error(formatApiError(err, "Failed to initiate payment"));
     }
   };
 
   const handleCancel = async () => {
     if (!booking) return;
     try {
-      await cancelBooking(booking.id).unwrap();
-      toast.success("Booking cancelled");
-    } catch {
-      toast.error("Failed to cancel booking");
+      const resp = await cancelBooking(booking.id).unwrap();
+      // Backend: {"detail": "Booking cancelled successfully.", "booking_id": "..."}
+      toast.success(resp.detail || "Booking cancelled");
+    } catch (err) {
+      toast.error(formatApiError(err, "Failed to cancel booking"));
     }
   };
 

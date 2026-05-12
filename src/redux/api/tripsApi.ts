@@ -46,8 +46,8 @@ const tripsApi = baseApi.injectEndpoints({
       providesTags: (_result, _error, id) => [{ type: "Trip", id }],
     }),
 
-    /** Mark a trip as completed */
-    completeTrip: builder.mutation<void, number>({
+    /** Mark a trip as completed. Backend returns the updated TripDetail. */
+    completeTrip: builder.mutation<TripDetail, number>({
       query: (id) => ({
         url: `/trips/${id}/complete/`,
         method: "POST",
@@ -73,24 +73,30 @@ const tripsApi = baseApi.injectEndpoints({
       providesTags: (_result, _error, { id }) => [{ type: "Trip", id }],
     }),
 
-    /** Upload pre-trip photos */
-    uploadPrePhotos: builder.mutation<void, { id: number; photos: FormData }>({
+    /** Upload pre-trip photos. Returns the created TripPhoto rows. */
+    uploadPrePhotos: builder.mutation<TripPhoto[], { id: number; photos: FormData }>({
       query: ({ id, photos }) => ({
         url: `/trips/${id}/pre-photos/`,
         method: "POST",
         body: photos,
       }),
-      invalidatesTags: (_result, _error, { id }) => [{ type: "Trip", id }],
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: "Trip", id },
+        { type: "TripList", id: "LIST" },
+      ],
     }),
 
-    /** Upload post-trip photos */
-    uploadPostPhotos: builder.mutation<void, { id: number; photos: FormData }>({
+    /** Upload post-trip photos. Returns the created TripPhoto rows. */
+    uploadPostPhotos: builder.mutation<TripPhoto[], { id: number; photos: FormData }>({
       query: ({ id, photos }) => ({
         url: `/trips/${id}/post-photos/`,
         method: "POST",
         body: photos,
       }),
-      invalidatesTags: (_result, _error, { id }) => [{ type: "Trip", id }],
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: "Trip", id },
+        { type: "TripList", id: "LIST" },
+      ],
     }),
   }),
 });
