@@ -67,10 +67,13 @@ export default function CarSearchPage() {
     const city = searchParams.get("city");
     if (city) params.city = city;
 
-    // Drive option
+    // Drive type — use `drive_type` (booking-side enum) so cars marked
+    // drive_option='both' show up for BOTH self-drive and chauffeur filters.
+    // Using `drive_option=self_drive_only` would exclude the most common
+    // case (cars set to "Self Drive & Chauffeur").
     const drive = searchParams.get("drive");
-    if (drive === "self") params.drive_option = "self_drive_only";
-    else if (drive === "chauffeur") params.drive_option = "chauffeur_only";
+    if (drive === "self") params.drive_type = "self_drive";
+    else if (drive === "chauffeur") params.drive_type = "with_chauffeur";
 
     // Price range
     if (selectedPrice) {

@@ -35,6 +35,8 @@ export function PricingCard({ car }: Props) {
   const [endDate, setEndDate] = useState(getDatePlusDays(4));
   const [pickupTime, setPickupTime] = useState("10:00");
   const [dropoffTime, setDropoffTime] = useState("10:00");
+  // Default to chauffeur when the car supports it. Self-drive only kicks in
+  // automatically for self_drive_only cars (where chauffeur isn't an option).
   const [isSelfDrive, setIsSelfDrive] = useState(
     car.drive_option === "self_drive_only",
   );

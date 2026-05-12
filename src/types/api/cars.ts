@@ -61,7 +61,17 @@ export interface CarSearchParams {
   city?: string;
   transmission?: Transmission;
   fuel_type?: FuelType;
+  /**
+   * Exact-match filter on Car.drive_option ("both" | "self_drive_only"
+   * | "chauffeur_only"). Mostly useful for admin tooling.
+   */
   drive_option?: DriveOption;
+  /**
+   * Booking-side drive type ("self_drive" | "with_chauffeur").
+   * Matches cars whose drive_option is "both" OR the matching exclusive
+   * value — this is what the customer search UI should use.
+   */
+  drive_type?: "self_drive" | "with_chauffeur";
   seats?: number;
   seats_min?: number;
   min_price?: number;
