@@ -48,7 +48,7 @@ export default function SupportSection() {
             />
           </div>
           <h3 className="font-bold text-gray-900 mb-1">Email</h3>
-          <p className="text-blue-600 font-semibold">support@gogaari.com</p>
+          <p className="text-blue-600 font-semibold">support@gogaaribd.com</p>
           <p className="text-xs text-gray-500 mt-1">Response within 24h</p>
         </div>
       </div>

@@ -2,6 +2,8 @@
 
 // ── Enums ────────────────────────────────────────────────────────
 export type BookingStatus =
+  | "pending_approval"
+  | "rejected"
   | "pending_payment"
   | "confirmed"
   | "active"

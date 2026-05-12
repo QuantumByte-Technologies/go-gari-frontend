@@ -14,14 +14,14 @@ const contactInfo = [
   {
     icon: Envelope,
     label: "Email",
-    value: "support@gogari.com",
-    href: "mailto:support@gogari.com",
+    value: "support@gogaaribd.com",
+    href: "mailto:support@gogaaribd.com",
   },
   {
     icon: Phone,
     label: "Phone",
-    value: "+880-1700-000000",
-    href: "tel:+8801700000000",
+    value: "+880 1706-271834",
+    href: "tel:+8801706271834",
   },
   {
     icon: MapPin,
@@ -200,11 +200,11 @@ export default function SupportPage() {
           <p>
             Can&apos;t find what you&apos;re looking for? Email us at{" "}
             <a
-              href="mailto:support@gogari.com"
+              href="mailto:support@gogaaribd.com"
               className="font-medium underline hover:no-underline"
               style={{ color: "#65AA36" }}
             >
-              support@gogari.com
+              support@gogaaribd.com
             </a>{" "}
             and we&apos;ll get back to you within 24 hours.
           </p>

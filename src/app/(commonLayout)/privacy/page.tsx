@@ -174,11 +174,11 @@ export default function PrivacyPage() {
                   <div className="mt-4 bg-gray-50 rounded-lg p-4 space-y-2">
                     <p className="text-gray-700">
                       <span className="font-medium">Email:</span>{" "}
-                      support@gogari.com
+                      support@gogaaribd.com
                     </p>
                     <p className="text-gray-700">
                       <span className="font-medium">Phone:</span>{" "}
-                      +880-1700-000000
+                      +880 1706-271834
                     </p>
                     <p className="text-gray-700">
                       <span className="font-medium">Address:</span> Dhaka,

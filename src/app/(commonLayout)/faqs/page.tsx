@@ -153,7 +153,7 @@ export default function FaqsPage() {
               Browse Cars
             </Link>
             <a
-              href="mailto:support@gogaari.com"
+              href="mailto:support@gogaaribd.com"
               className="inline-block px-8 py-3 font-semibold rounded-lg transition-opacity hover:opacity-90"
               style={{
                 color: "#65AA36",

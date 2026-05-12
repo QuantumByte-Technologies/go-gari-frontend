@@ -14,11 +14,19 @@ import BookingCard from "./BookingCard";
 type BookingTab = "upcoming" | "active" | "completed" | "cancelled";
 
 const TAB_TO_STATUSES: Record<BookingTab, BookingStatus[]> = {
-  upcoming: ["pending_payment", "confirmed"],
+  upcoming: ["pending_approval", "pending_payment", "confirmed"],
   active: ["active"],
   completed: ["completed"],
-  cancelled: ["cancelled", "refunded"],
+  cancelled: ["cancelled", "refunded", "rejected"],
 };
+
+// Statuses that an admin can still change — drives the polling decision.
+const NON_TERMINAL_STATUSES: BookingStatus[] = [
+  "pending_approval",
+  "pending_payment",
+  "confirmed",
+  "active",
+];
 
 export default function TripsSection() {
   const router = useRouter();
@@ -33,6 +41,17 @@ export default function TripsSection() {
   const [initiatePayment] = useInitiatePaymentMutation();
 
   const allBookings = data?.results ?? [];
+
+  // If the user has any booking whose status the admin can still flip,
+  // poll the list so the UI moves them from "Awaiting Approval" to
+  // "Pending Payment" (etc.) without a manual refresh.
+  const hasNonTerminalBooking = allBookings.some((b) =>
+    NON_TERMINAL_STATUSES.includes(b.status),
+  );
+  useGetBookingsQuery(undefined, {
+    skip: !hasNonTerminalBooking,
+    pollingInterval: 7000,
+  });
 
   // Filter bookings by active tab's status set
   const filteredBookings = useMemo(() => {

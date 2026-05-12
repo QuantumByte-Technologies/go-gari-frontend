@@ -117,23 +117,23 @@ export function Footer() {
             {/* Contact */}
             <div className="space-y-3">
               <a
-                href="tel:+8801234567890"
+                href="tel:+8801706271834"
                 className="flex items-center gap-3 text-gray-400 hover:text-[#5E9D34] transition-colors group"
               >
                 <span className="w-10 h-10 rounded-lg bg-gray-900 flex items-center justify-center group-hover:bg-[#5E9D34] transition-colors">
                   <Phone size={20} weight="duotone" />
                 </span>
-                <span>+880 1234-567890</span>
+                <span>+880 1706-271834</span>
               </a>
 
               <a
-                href="mailto:hello@gogaari.com"
+                href="mailto:support@gogaaribd.com"
                 className="flex items-center gap-3 text-gray-400 hover:text-[#5E9D34] transition-colors group"
               >
                 <span className="w-10 h-10 rounded-lg bg-gray-900 flex items-center justify-center group-hover:bg-[#5E9D34] transition-colors">
                   <EnvelopeSimple size={20} weight="duotone" />
                 </span>
-                <span>hello@gogaari.com</span>
+                <span>support@gogaaribd.com</span>
               </a>
             </div>
 

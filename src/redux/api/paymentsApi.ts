@@ -9,8 +9,11 @@ import type {
 const paymentsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     /**
-     * Initiate an SSLCommerz payment for a booking.
-     * Returns a `payment_url` that the frontend should redirect to.
+     * Initiate a DGePay payment for an approved booking.
+     * Returns a `payment_url` (DGePay checkout webview) that the frontend
+     * should redirect the user to. After payment, the gateway bounces the
+     * user back through the backend redirect handler to /payments/success
+     * (or /payments/fail / /payments/cancel).
      */
     initiatePayment: builder.mutation<
       PaymentInitiateResponse,

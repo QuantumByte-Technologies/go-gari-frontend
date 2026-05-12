@@ -1,13 +1,17 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useGetBookingByIdQuery } from "@/redux/api/bookingsApi";
+import {
+  useGetBookingByIdQuery,
+  useCancelBookingMutation,
+} from "@/redux/api/bookingsApi";
 import { useInitiatePaymentMutation } from "@/redux/api/paymentsApi";
 import { selectIsAuthenticated } from "@/redux/features/auth/authSlice";
 import { useSelector } from "react-redux";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { formatBDT } from "@/utils/checkout";
+import type { BookingStatus } from "@/types/api/bookings";
 import {
   CaretRight,
   Car,
@@ -22,6 +26,8 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+  pending_approval: { label: "Awaiting Approval", color: "bg-yellow-100 text-yellow-800" },
+  rejected: { label: "Rejected", color: "bg-red-100 text-red-700" },
   pending_payment: { label: "Pending Payment", color: "bg-amber-100 text-amber-700" },
   confirmed: { label: "Confirmed", color: "bg-blue-100 text-blue-700" },
   active: { label: "Active", color: "bg-green-100 text-green-700" },
@@ -38,9 +44,25 @@ export default function BookingDetailPage() {
 
   const { data: booking, isLoading, isError } = useGetBookingByIdQuery(bookingId, {
     skip: !isAuthenticated || isNaN(bookingId),
+    refetchOnMountOrArgChange: true,
+  });
+
+  // Poll only while the booking is in a state that the admin can flip
+  // (e.g. awaiting approval). Terminal states don't need polling.
+  const NON_TERMINAL: ReadonlyArray<BookingStatus> = [
+    "pending_approval",
+    "pending_payment",
+    "confirmed",
+    "active",
+  ];
+  const shouldPoll = !!booking && NON_TERMINAL.includes(booking.status);
+  useGetBookingByIdQuery(bookingId, {
+    skip: !shouldPoll,
+    pollingInterval: 7000,
   });
 
   const [initiatePayment, { isLoading: isPaying }] = useInitiatePaymentMutation();
+  const [cancelBooking, { isLoading: isCancelling }] = useCancelBookingMutation();
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -55,6 +77,16 @@ export default function BookingDetailPage() {
       window.location.href = result.payment_url;
     } catch {
       toast.error("Failed to initiate payment");
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!booking) return;
+    try {
+      await cancelBooking(booking.id).unwrap();
+      toast.success("Booking cancelled");
+    } catch {
+      toast.error("Failed to cancel booking");
     }
   };
 
@@ -206,14 +238,40 @@ export default function BookingDetailPage() {
           </div>
         </div>
 
-        {/* Expiry notice */}
+        {/* Awaiting approval banner */}
+        {booking.status === "pending_approval" && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6 flex items-start gap-3">
+            <Clock size={20} weight="fill" className="text-yellow-500 mt-0.5 shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-yellow-800">Awaiting admin approval</p>
+              <p className="text-xs text-yellow-700 mt-0.5">
+                Our team is reviewing your reservation request. We&apos;ll notify you as soon as it&apos;s approved and you can complete payment.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Rejected banner */}
+        {booking.status === "rejected" && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 flex items-start gap-3">
+            <Clock size={20} weight="fill" className="text-red-500 mt-0.5 shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-red-800">Reservation rejected</p>
+              <p className="text-xs text-red-700 mt-0.5">
+                Unfortunately this reservation could not be approved. Please try different dates or contact support if you have questions.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Payment required banner */}
         {booking.status === "pending_payment" && booking.expires_at && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-start gap-3">
             <Clock size={20} weight="fill" className="text-amber-500 mt-0.5 shrink-0" />
             <div>
               <p className="text-sm font-medium text-amber-800">Payment required</p>
               <p className="text-xs text-amber-600 mt-0.5">
-                This booking expires on {new Date(booking.expires_at).toLocaleString()}. Please complete payment before then.
+                Your reservation has been approved! Complete payment by {new Date(booking.expires_at).toLocaleString()} to confirm your booking.
               </p>
             </div>
           </div>
@@ -227,6 +285,20 @@ export default function BookingDetailPage() {
           >
             View Car
           </Button>
+
+          {(booking.status === "pending_approval" ||
+            booking.status === "pending_payment") && (
+            <Button
+              variant="ghost"
+              onClick={handleCancel}
+              disabled={isCancelling}
+              className="text-red-600 hover:bg-red-50"
+            >
+              {isCancelling ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {booking.status === "pending_approval" ? "Cancel Request" : "Cancel"}
+            </Button>
+          )}
+
           {booking.status === "pending_payment" && (
             <Button
               onClick={handlePay}

@@ -67,8 +67,9 @@ describe("authApi", () => {
     );
 
     expect(result.data).toBeDefined();
-    expect(result.data?.email).toBe("new@example.com");
-    expect(result.data?.first_name).toBe("New");
+    expect(result.data?.message).toContain("Registration successful");
+    expect(result.data?.phone).toBe("+8801712345678");
+    expect(typeof result.data?.user_id).toBe("number");
   });
 
   it("register mutation handles 400 validation errors (duplicate email)", async () => {

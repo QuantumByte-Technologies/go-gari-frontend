@@ -1,6 +1,6 @@
 import React, { type PropsWithChildren } from "react";
 import { render, type RenderOptions } from "@testing-library/react";
-import { configureStore, type EnhancedStore } from "@reduxjs/toolkit";
+import { configureStore } from "@reduxjs/toolkit";
 import { Provider } from "react-redux";
 import baseApi from "@/redux/api/baseApi";
 import rootReducer from "@/redux/features/rootReducer";
@@ -8,9 +8,10 @@ import type { RootState } from "@/redux/store";
 import type { AuthState } from "@/redux/features/auth/authSlice";
 
 // ─── Create a test store with optional preloaded state ──────────
-export function createTestStore(
-  preloadedState?: Partial<RootState>,
-): EnhancedStore {
+// Return type is inferred so `dispatch` keeps the thunk-aware overload
+// added by `baseApi.middleware` — without that, calling
+// `store.dispatch(authApi.endpoints.X.initiate(...))` fails to typecheck.
+export function createTestStore(preloadedState?: Partial<RootState>) {
   return configureStore({
     reducer: rootReducer,
     middleware: (getDefaultMiddleware) =>
@@ -21,10 +22,12 @@ export function createTestStore(
   });
 }
 
+export type TestStore = ReturnType<typeof createTestStore>;
+
 // ─── Render with Redux Provider ─────────────────────────────────
 interface ExtendedRenderOptions extends Omit<RenderOptions, "queries"> {
   preloadedState?: Partial<RootState>;
-  store?: EnhancedStore;
+  store?: TestStore;
 }
 
 export function renderWithProviders(

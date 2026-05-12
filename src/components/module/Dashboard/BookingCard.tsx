@@ -9,6 +9,8 @@ import {
   CheckCircle,
   Clock,
   CreditCard,
+  Hourglass,
+  Prohibit,
   XCircle,
   ArrowClockwise,
 } from "@phosphor-icons/react";
@@ -26,6 +28,16 @@ const STATUS_CONFIG: Record<
   string,
   { label: string; color: string; icon: React.ElementType }
 > = {
+  pending_approval: {
+    label: "Awaiting Approval",
+    color: "bg-yellow-100 text-yellow-800",
+    icon: Hourglass,
+  },
+  rejected: {
+    label: "Rejected",
+    color: "bg-red-100 text-red-700",
+    icon: Prohibit,
+  },
   pending_payment: {
     label: "Pending Payment",
     color: "bg-amber-100 text-amber-700",
@@ -66,8 +78,11 @@ export default function BookingCard({
   onViewDetails,
 }: Props) {
   const isCancelled =
-    booking.status === "cancelled" || booking.status === "refunded";
+    booking.status === "cancelled" ||
+    booking.status === "refunded" ||
+    booking.status === "rejected";
   const isPendingPayment = booking.status === "pending_payment";
+  const isPendingApproval = booking.status === "pending_approval";
   const statusConfig = STATUS_CONFIG[booking.status] ?? STATUS_CONFIG.confirmed;
   const StatusIcon = statusConfig.icon;
 
@@ -140,6 +155,17 @@ export default function BookingCard({
         </div>
 
         <div className="flex items-center gap-3">
+          {isPendingApproval && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-red-600 hover:bg-red-50"
+              onClick={onCancel}
+            >
+              Cancel Request
+            </Button>
+          )}
+
           {isPendingPayment && (
             <>
               <Button size="sm" onClick={onPay}>
