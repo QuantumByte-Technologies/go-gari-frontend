@@ -293,6 +293,28 @@ export default function TripDetailPage() {
           </div>
         )}
 
+        {/* Chauffeur trips: explain why there's no photo upload section
+            instead of leaving the page mysteriously empty. */}
+        {isActive && !isSelfDrive && (
+          <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 mb-6 flex items-start gap-3">
+            <Camera
+              size={20}
+              weight="duotone"
+              className="text-gray-400 shrink-0 mt-0.5"
+            />
+            <div>
+              <p className="text-sm font-medium text-gray-800">
+                Pre-trip photos are only required for self-drive trips
+              </p>
+              <p className="text-xs text-gray-600 mt-1 leading-relaxed">
+                Your chauffeur will handle the car-condition inspection for
+                this trip, so there&apos;s nothing for you to upload here.
+                Just enjoy the ride.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Pre-trip photos — visible for the whole active self-drive trip,
             independent of post-trip. Customer can keep adding shots. */}
         {isActive && isSelfDrive && (
