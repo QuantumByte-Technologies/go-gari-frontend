@@ -166,7 +166,7 @@ export default function TripsSection() {
                 : `No ${activeTab} bookings to show.`}
             </p>
             {activeTab === "upcoming" && (
-              <Button onClick={() => router.push("/search")}>Book a Car</Button>
+              <Button onClick={() => router.push("/search-cars")}>Book a Car</Button>
             )}
           </div>
         ) : (

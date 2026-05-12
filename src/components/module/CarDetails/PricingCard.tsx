@@ -1,7 +1,7 @@
 // components/pricing/PricingCard.tsx
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Lightning, Car as CarIcon } from "@phosphor-icons/react";
+import { ShieldCheck, Car as CarIcon } from "@phosphor-icons/react";
 import type { CarDetail } from "@/types/api/cars";
 import { useCalculatePricingQuery } from "@/redux/api/pricingApi";
 import { cn } from "@/lib/utils";
@@ -62,10 +62,34 @@ export function PricingCard({ car }: Props) {
     },
   );
 
+  // Build a Set of unavailable YYYY-MM-DD strings — booked AND pending dates
+  // both block selection (a pending reservation is holding the car).
+  const unavailableDateSet = useMemo(() => {
+    const set = new Set<string>();
+    for (const entry of car.unavailable_dates ?? []) {
+      if (entry?.date) set.add(entry.date);
+    }
+    return set;
+  }, [car.unavailable_dates]);
+
+  // Detect whether the currently-selected range overlaps any unavailable date.
+  const rangeOverlapsUnavailable = useMemo(() => {
+    if (!startDate || !endDate) return false;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+      const ymd = d.toISOString().split("T")[0];
+      if (unavailableDateSet.has(ymd)) return true;
+    }
+    return false;
+  }, [startDate, endDate, unavailableDateSet]);
+
   const canCheckout = useMemo(() => {
     if (!startDate || !endDate) return false;
-    return new Date(endDate) > new Date(startDate);
-  }, [startDate, endDate]);
+    if (new Date(endDate) <= new Date(startDate)) return false;
+    if (rangeOverlapsUnavailable) return false;
+    return true;
+  }, [startDate, endDate, rangeOverlapsUnavailable]);
 
   const handleCheckout = () => {
     // Store booking draft in localStorage for the checkout page
@@ -116,20 +140,33 @@ export function PricingCard({ car }: Props) {
       )}
 
       <div className="mb-6 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#5E9D34]">
-        <Lightning size={14} weight="fill" />
-        Instant Confirmation
+        <ShieldCheck size={14} weight="fill" />
+        Reservation reviewed by admin
       </div>
 
       {/* Date selection */}
-      <div className="mb-4">
+      <div className="mb-2">
         <DateRangePicker
           startDate={startDate}
           endDate={endDate}
           onStartChange={setStartDate}
           onEndChange={setEndDate}
           minDate={new Date(getTomorrow())}
+          disabledDates={unavailableDateSet}
         />
       </div>
+
+      {/* Availability legend + warnings */}
+      {unavailableDateSet.size > 0 && (
+        <p className="mb-4 text-xs text-gray-500">
+          Greyed-out dates are already booked or held by a pending reservation.
+        </p>
+      )}
+      {rangeOverlapsUnavailable && (
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          Your selected range overlaps a booked or pending date. Please pick different dates.
+        </div>
+      )}
 
       {/* Time inputs */}
       <div className="mb-6 grid grid-cols-2 gap-3">
@@ -212,11 +249,11 @@ export function PricingCard({ car }: Props) {
       </div>
 
       <PrimaryButton onClick={handleCheckout} disabled={!canCheckout || isCalculating}>
-        Continue to Book
+        Request Reservation
       </PrimaryButton>
 
       <p className="mt-3 text-center text-xs text-gray-400">
-        Free cancellation until 24h before pickup
+        You won&apos;t be charged until your reservation is approved.
       </p>
     </div>
   );

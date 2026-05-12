@@ -38,7 +38,6 @@ export interface CarListItem {
 
 /** Car as returned in detail endpoint (e.g., /api/v1/cars/{id}/) */
 export interface CarDetail extends Omit<CarListItem, "primary_image"> {
-  tags: Record<string, unknown>;
   description: string;
   pickup_location_lat: string | null;
   pickup_location_lng: string | null;
@@ -47,7 +46,13 @@ export interface CarDetail extends Omit<CarListItem, "primary_image"> {
   created_at: string;
   updated_at: string;
   images: CarImage[];
-  unavailable_dates: string;
+  /**
+   * Dates unavailable for this car, each with a reason.
+   * `reason: "booked"` — confirmed/active booking, definitively unavailable.
+   * `reason: "pending"` — pending_approval OR pending_payment, tentatively held.
+   * `reason: "blocked"` — admin manually blocked.
+   */
+  unavailable_dates: UnavailableDateEntry[];
 }
 
 /** Query parameters for the car search/list endpoint */

@@ -18,6 +18,8 @@ interface DatePickerProps {
   minDate?: Date
   /** Disable dates after this date */
   maxDate?: Date
+  /** Additional individual dates to disable, as YYYY-MM-DD strings. */
+  disabledDates?: ReadonlySet<string> | readonly string[]
   disabled?: boolean
   className?: string
   id?: string
@@ -49,6 +51,7 @@ export function DatePicker({
   placeholder = "Pick a date",
   minDate,
   maxDate,
+  disabledDates,
   disabled,
   className,
   id,
@@ -62,6 +65,14 @@ export function DatePicker({
   const thisYear = new Date().getFullYear()
   const resolvedFromYear = fromYear ?? (maxDate ? thisYear - 100 : thisYear - 1)
   const resolvedToYear = toYear ?? (maxDate ? thisYear : thisYear + 5)
+
+  // Normalise disabledDates to a Set for O(1) lookups.
+  const disabledSet = React.useMemo(() => {
+    if (!disabledDates) return null
+    return disabledDates instanceof Set
+      ? disabledDates
+      : new Set(disabledDates)
+  }, [disabledDates])
 
   const handleSelect = (date: Date | undefined) => {
     onChange(date ? toYMD(date) : "")
@@ -97,6 +108,7 @@ export function DatePicker({
           disabled={(date) => {
             if (minDate && date < minDate) return true
             if (maxDate && date > maxDate) return true
+            if (disabledSet && disabledSet.has(toYMD(date))) return true
             return false
           }}
           initialFocus
@@ -113,6 +125,8 @@ interface DateRangePickerProps {
   onStartChange: (value: string) => void
   onEndChange: (value: string) => void
   minDate?: Date
+  /** YYYY-MM-DD strings that should be greyed out (booked / pending / blocked). */
+  disabledDates?: ReadonlySet<string> | readonly string[]
   className?: string
 }
 
@@ -122,6 +136,7 @@ export function DateRangePicker({
   onStartChange,
   onEndChange,
   minDate,
+  disabledDates,
   className,
 }: DateRangePickerProps) {
   const parsedStart = parseYMD(startDate)
@@ -142,6 +157,7 @@ export function DateRangePicker({
             }
           }}
           minDate={minDate}
+          disabledDates={disabledDates}
           placeholder="Select start date"
           captionLayout="dropdown"
           fromYear={new Date().getFullYear()}
@@ -156,6 +172,7 @@ export function DateRangePicker({
           value={endDate}
           onChange={onEndChange}
           minDate={parsedStart ?? minDate}
+          disabledDates={disabledDates}
           placeholder="Select end date"
           disabled={!startDate}
           captionLayout="dropdown"

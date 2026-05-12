@@ -186,7 +186,7 @@ export default function BookingCard({
           {booking.status === "completed" && (
             <Button
               size="sm"
-              onClick={() => (window.location.href = "/search")}
+              onClick={() => (window.location.href = "/search-cars")}
             >
               <ArrowClockwise size={16} weight="bold" className="mr-2" />
               Book Again
@@ -196,7 +196,7 @@ export default function BookingCard({
           {isCancelled && (
             <Button
               size="sm"
-              onClick={() => (window.location.href = "/search")}
+              onClick={() => (window.location.href = "/search-cars")}
             >
               <ArrowClockwise size={16} weight="bold" className="mr-2" />
               Rebook
