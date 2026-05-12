@@ -24,7 +24,6 @@ import {
   useGetTripPhotosQuery,
   useUploadPrePhotosMutation,
   useUploadPostPhotosMutation,
-  useCompleteTripMutation,
 } from "@/redux/api/tripsApi";
 import { Button } from "@/components/ui/button";
 import { formatApiError } from "@/utils/apiMessage";
@@ -62,7 +61,6 @@ export default function TripDetailPage() {
     useUploadPrePhotosMutation();
   const [uploadPostPhotos, { isLoading: uploadingPost }] =
     useUploadPostPhotosMutation();
-  const [completeTrip, { isLoading: completing }] = useCompleteTripMutation();
 
   const prePhotoInputRef = useRef<HTMLInputElement | null>(null);
   const postPhotoInputRef = useRef<HTMLInputElement | null>(null);
@@ -112,6 +110,25 @@ export default function TripDetailPage() {
   const isActive = trip.status === "active";
   const isSelfDrive = trip.drive_type === "self_drive";
 
+  // Visibility for the two photo sections — they are independent:
+  //
+  //  PRE-TRIP card: visible whenever the trip is active for a self-drive
+  //    booking, regardless of duration. Customer is encouraged to upload
+  //    before driving, but the card stays so they can add more later.
+  //
+  //  POST-TRIP card: visible only on the trip's last day or after, so the
+  //    customer isn't tempted to upload "after" photos mid-trip.
+  //
+  // For a 1-day self-drive booking both sections show on the same day —
+  // that's correct behaviour (pre-drive → drive → post-drive).
+  //
+  // With-chauffeur trips don't get either card: the chauffeur handles the
+  // car inspection, and damage liability isn't on the customer.
+  //
+  // `trip.end_date` is YYYY-MM-DD; compare as ISO strings (lex-orderable).
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const isOnOrAfterEndDate = todayStr >= trip.end_date;
+
   const handlePrePhotoUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const formData = new FormData();
@@ -137,15 +154,6 @@ export default function TripDetailPage() {
       setCaption("");
     } catch (err) {
       toast.error(formatApiError(err, "Failed to upload post-trip photos"));
-    }
-  };
-
-  const handleComplete = async () => {
-    try {
-      await completeTrip(tripId).unwrap();
-      toast.success("Trip marked as completed");
-    } catch (err) {
-      toast.error(formatApiError(err, "Failed to complete trip"));
     }
   };
 
@@ -278,23 +286,29 @@ export default function TripDetailPage() {
                 Trip hasn&apos;t started yet
               </p>
               <p className="text-xs text-blue-700 mt-0.5">
-                You&apos;ll be able to upload pre-trip photos and complete the
-                trip once it starts on {trip.start_date}.
+                You&apos;ll be able to upload pre-trip photos once your trip
+                starts on {trip.start_date}.
               </p>
             </div>
           </div>
         )}
 
-        {/* Photo upload sections — active self-drive trips only */}
+        {/* Pre-trip photos — visible for the whole active self-drive trip,
+            independent of post-trip. Customer can keep adding shots. */}
         {isActive && isSelfDrive && (
           <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
             <h3 className="text-base font-semibold text-gray-900 mb-2 flex items-center gap-2">
               <Camera size={20} weight="duotone" className="text-[#5E9D34]" />
-              Pre-trip photos
+              Before driving — pre-trip photos
             </h3>
             <p className="text-sm text-gray-600 mb-4">
-              Upload photos of the car&apos;s condition before driving. This
-              protects you from damage disputes.
+              Upload photos of the car&apos;s condition <strong>before you start
+              driving</strong>. This protects you from damage disputes.
+              {prePhotos.length > 0 && (
+                <span className="ml-1 text-[#5E9D34] font-medium">
+                  ({prePhotos.length} uploaded)
+                </span>
+              )}
             </p>
             <input
               ref={prePhotoInputRef}
@@ -323,15 +337,23 @@ export default function TripDetailPage() {
           </div>
         )}
 
-        {isActive && (
+        {/* Post-trip photos — self-drive only, last day of trip onwards.
+            Backend auto-completes the trip the day after end_date at noon. */}
+        {isActive && isSelfDrive && isOnOrAfterEndDate && (
           <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
             <h3 className="text-base font-semibold text-gray-900 mb-2 flex items-center gap-2">
               <Camera size={20} weight="duotone" className="text-[#5E9D34]" />
-              Post-trip photos
+              After driving — post-trip photos
             </h3>
             <p className="text-sm text-gray-600 mb-4">
-              Once you&apos;re done driving, upload post-trip photos and mark
-              the trip as completed.
+              Your trip is ending today. Upload photos of the car&apos;s
+              condition <strong>after driving</strong> so we can finalise your
+              booking.
+              {postPhotos.length > 0 && (
+                <span className="ml-1 text-[#5E9D34] font-medium">
+                  ({postPhotos.length} uploaded)
+                </span>
+              )}
             </p>
             <input
               ref={postPhotoInputRef}
@@ -392,21 +414,16 @@ export default function TripDetailPage() {
             <User size={16} weight="bold" className="mr-2" />
             View booking
           </Button>
-          {isActive && (
-            <Button
-              onClick={handleComplete}
-              disabled={completing}
-              className="bg-[#65AA36] hover:bg-[#5E9D34]"
-            >
-              {completing ? (
-                <Spinner size={16} className="mr-2 animate-spin" />
-              ) : (
-                <CheckCircle size={16} weight="bold" className="mr-2" />
-              )}
-              Mark trip as completed
-            </Button>
-          )}
         </div>
+
+        {/* End-of-trip notice. The backend auto-completes the trip the day
+            after end_date — customers don't end trips themselves. */}
+        {isActive && isOnOrAfterEndDate && (
+          <p className="mt-4 text-xs text-gray-500">
+            Your trip will be marked as completed automatically once it ends.
+            Make sure to upload your post-trip photos before then.
+          </p>
+        )}
       </div>
     </div>
   );
