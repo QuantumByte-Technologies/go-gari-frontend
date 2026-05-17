@@ -91,7 +91,7 @@ export function JourneyShowcase() {
               fill
               className="object-cover transition-transform duration-700 group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
+            <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/50 to-black/20" />
             <div className="absolute inset-0 p-8 flex flex-col justify-end">
               <div className="flex gap-1 mb-4">
                 {[1, 2, 3, 4, 5].map((star) => (
