@@ -37,7 +37,7 @@ export function Hero() {
       {/* Background */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="https://cdn.magicpatterns.com/uploads/aiGg1Et6ZNeYPSgqBa3EKn/Backgroudn_image.png"
+          src="/image/Backgroudn_image.png"
           alt="GO GAARI Car"
           fill
           priority
@@ -46,7 +46,7 @@ export function Hero() {
         />
         <div className="absolute inset-0 bg-black/50" />
         {/* FIXED gradient */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-r from-black/70 via-black/40 to-transparent" />
       </div>
 
       {/* Angled bottom edge */}

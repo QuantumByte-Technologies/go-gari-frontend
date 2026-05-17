@@ -1,9 +1,10 @@
 "use client";
 import CitySection from "./CitySection";
 import { DriveTypeSection } from "./DriveTypeSection";
-import FinalCTA from "./FinalCTA";
+import { FinalCTA } from "./FinalCTA";
 import { Hero } from "./hero";
 import { HowItWorks } from "./HowItWorks";
+import { JourneyShowcase } from "./JorneyShowCase";
 import { NearbyCars } from "./NearbyCars";
 import PlatformClarity from "./PlatformClarity";
 import RideCategories from "./RideCategories";
@@ -18,6 +19,7 @@ function Home() {
       <NearbyCars />
       <HowItWorks />
       <CitySection />
+      <JourneyShowcase />
       <RideCategories />
       <SafetySection />
       <TestimonialsSection />
