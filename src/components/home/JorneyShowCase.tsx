@@ -61,7 +61,7 @@ export function JourneyShowcase() {
               fill
               className="object-cover transition-transform duration-700 group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent" />
             <div className="absolute bottom-0 left-0 right-0 p-8 md:p-10">
               <span className="inline-block px-3 py-1 bg-[#5E9D34] text-white text-xs font-bold uppercase tracking-wider rounded-full mb-4">
                 Premium SUV
@@ -125,7 +125,7 @@ export function JourneyShowcase() {
               fill
               className="object-cover transition-transform duration-700 group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent" />
             <div className="absolute bottom-0 left-0 right-0 p-8">
               <h3 className="text-2xl font-bold text-white mb-3">
                 Choose Your Adventure
@@ -151,7 +151,7 @@ export function JourneyShowcase() {
               fill
               className="object-cover transition-transform duration-700 group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-black/30" />
+            <div className="absolute inset-0 bg-linear-to-r from-black/90 via-black/50 to-black/30" />
             <div className="absolute inset-0 p-8 md:p-10 flex flex-col justify-center w-full md:w-2/3">
               <h3 className="text-3xl font-bold text-white mb-4">
                 It&apos;s What&apos;s Inside That Counts
